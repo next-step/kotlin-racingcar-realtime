@@ -1,19 +1,31 @@
 package service
 
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import model.Car
-import kotlin.random.Random
 
 class RealtimeRacingCarService {
-    suspend fun start(car: Car, distance: Int) {
-        val randomDelay = Random.nextLong(0, 500+1)
-        while(car.position < distance) {
-            delay(randomDelay)
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+
+    suspend fun start(cars: List<Car>, distance: Int) {
+
+        coroutineScope {
+            val jobs = cars.map {
+                scope.launch {
+                    move(it, distance)
+                }
+            }
+            jobs.joinAll()
+        }
+    }
+
+    private suspend fun move(car: Car, distance: Int) {
+        while (car.position < distance) {
+            delay((1..500).random().toLong())
             car.move()
             car.printCurrentPosition()
             if (car.position == distance) {
                 car.printWinner()
-                throw IllegalArgumentException("최종 우승자 발생")
+                scope.cancel()
             }
         }
     }
