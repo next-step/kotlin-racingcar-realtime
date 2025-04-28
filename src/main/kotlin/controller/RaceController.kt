@@ -41,7 +41,7 @@ class RaceController(
     suspend fun runRound(
         carList: List<Car>,
         goal: Int,
-        scope: CoroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+        scope: CoroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob()),
     ) {
         raceView.showRoundResult()
         carList.map {
