@@ -2,6 +2,7 @@ package model
 
 import entity.Car
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 class RaceModel {
     fun initCarList(input: String): List<Car> {
@@ -27,8 +28,7 @@ class RaceModel {
     }
 
     suspend fun runRound(car: Car): Car {
-        val random = (0..500).random().toLong()
-        delay(random)
+        delay((0..500).random().milliseconds)
         car.move()
         return car
     }
