@@ -1,5 +1,8 @@
 import controller.RacingController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import view.RaceView
 
@@ -11,6 +14,10 @@ fun main() {
         initRound(raceController = raceController)
 
         startGame(raceController)
+
+        CoroutineScope(Dispatchers.Default).launch {
+            waitAddCar(raceController)
+        }.join()
     }
 }
 
@@ -25,8 +32,26 @@ private fun initRound(raceController: RacingController) {
 }
 
 private suspend fun startGame(raceController: RacingController) {
-    coroutineScope {
-        raceController.printStartGameMeesage()
-        raceController.startGame()
+    CoroutineScope(Dispatchers.Default).launch {
+        //coroutineScope {
+            raceController.printStartGameMeesage()
+            val job1 = launch {
+                raceController.startGame()
+            }
+
+            //waitAddCar(raceController)
+            //job1.join()
+        //}
     }
+}
+
+private suspend fun waitAddCar(raceController: RacingController) {
+        while(!raceController.ended()) {
+            println("wait Enter")
+            raceController.inputWaiting()
+            println("wait car name")
+            raceController.inputAndValidateAddRacingCarNames()
+            //raceController.startGame()
+            startGame(raceController)
+        }
 }

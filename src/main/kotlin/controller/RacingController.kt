@@ -18,6 +18,10 @@ class RacingController(
 ) {
     var racingCars = mutableListOf<RacingCar>()
     var distance = Distance()
+    var pause = false
+    var ended = false
+
+    fun ended(): Boolean { return ended}
 
     fun printCarListInputMessage() {
         raceView.printContent("경주할 자동차 이름을 입력하세요.(이름은 쉼표(,) 기준으로 구분)")
@@ -50,6 +54,30 @@ class RacingController(
         }
     }
 
+    fun inputWaiting() {
+        raceView.inputContent()
+        pause = true
+    }
+
+    fun inputAndValidateAddRacingCarNames() {
+        var isValidationPassed = false
+
+        while (isValidationPassed.not()) {
+            try {
+                raceView.inputContent().also { inputRacingAddCarNames ->
+                    isValidationPassed = RacingCarNameValidator.isValidateAddRacingCarName(inputRacingAddCarNames)
+                    //racingCars = RacingCarMapper.mapToRacingCars(inputRacingAddCarNames).toMutableList()
+                    racingCars.add(RacingCar(inputRacingAddCarNames.substring(4)))
+                    println("${inputRacingAddCarNames.substring(4)} 참가 완료!")
+                    println(racingCars)
+                    pause = false
+                }
+            } catch (exception: IllegalStateException) {
+                raceView.printError(exception.message ?: "Error!")
+            }
+        }
+    }
+
     fun inputAndValidateDistance() {
         while (distance.totalDistance <= 0) {
             try {
@@ -63,20 +91,23 @@ class RacingController(
     }
 
     suspend fun startGame() {
+        println("start Game")
         try {
-            coroutineScope() {
+            coroutineScope {
                 racingCars.forEachIndexed { index, racingCar ->
                     launch {
-                        while (racingCars[index].position < distance.totalDistance
-                            || !racingCars.any { it.position >= distance.totalDistance }
-                        ) {
+                        while (racingCars[index].position < distance.totalDistance && !pause) {
                             delay(RandomNumberGenerator.generateRandomNumber().toLong())
                             racingCars[index] = racingCars[index].copy(position = racingCars[index].position + 1)
                             printRacingCarStatus(racingCars[index])
                         }
-                        this@coroutineScope.cancel()
-                    }
 
+                        if (!pause) {
+                            ended = true
+                            println(racingCars)
+                            this@coroutineScope.cancel()
+                        }
+                    }
                 }
             }
         } catch (exception: Exception) {
