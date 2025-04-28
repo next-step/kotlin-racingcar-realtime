@@ -16,20 +16,18 @@ class RaceView {
     }
 
     fun showCarStatus(car: Car) {
-        val sb = StringBuilder()
-        sb.append(car.name)
-        sb.append(" : ")
-        repeat(car.distance) {
-            sb.append("-")
-        }
-        println(sb)
+        println(StringBuilder().apply {
+            append(car.name)
+            append(" : ")
+            append("-".repeat(car.distance))
+        })
     }
 
     fun showWinners(winners: List<String>) {
-        val sb = StringBuilder()
-        sb.append(winners.joinToString(", "))
-        sb.append("가 최종 우승했습니다.")
-        println(sb)
+        println(StringBuilder().apply {
+            append(winners.joinToString(", "))
+            append("가 최종 우승했습니다.")
+        })
     }
 
     fun showErrorMsg(msg: String) {
