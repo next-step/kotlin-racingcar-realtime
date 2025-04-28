@@ -17,7 +17,7 @@ class Car(
         println("[${Thread.currentThread().name}] $name: ${"-".repeat(distance)}")
     }
 
-    fun arrived(destinationDistance: Int): Boolean {
+    fun isArrived(destinationDistance: Int): Boolean {
         return distance == destinationDistance
     }
 }
