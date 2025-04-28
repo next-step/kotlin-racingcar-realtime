@@ -7,31 +7,28 @@ class RaceView {
         println("경주할 자동차 이름을 입력하세요.(이름은 쉼표(,) 기준으로 구분)")
     }
 
-    fun showRoundInitMsg() {
-        println("시도할 회수는 몇회인가요?")
+    fun showGoalInitMsg() {
+        println("목표 거리를 입력하세요.")
     }
 
     fun showRoundResult() {
         println("\n실행 결과")
     }
 
-    fun showEachRoundResult(carList: List<Car>) {
-        carList.forEach {
-            val sb = StringBuilder()
-            sb.append(it.name)
-            sb.append(" : ")
-            repeat(it.distance) {
-                sb.append("-")
-            }
-            println(sb)
+    fun showCarStatus(car: Car) {
+        val sb = StringBuilder()
+        sb.append(car.name)
+        sb.append(" : ")
+        repeat(car.distance) {
+            sb.append("-")
         }
-        println()
+        println(sb)
     }
 
     fun showWinners(winners: List<String>) {
         val sb = StringBuilder()
-        sb.append("최종 우승자 : ")
         sb.append(winners.joinToString(", "))
+        sb.append("가 최종 우승했습니다.")
         println(sb)
     }
 

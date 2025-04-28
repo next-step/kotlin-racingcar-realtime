@@ -1,6 +1,13 @@
 package controller
 
 import entity.Car
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import model.RaceModel
 import view.RaceView
 
@@ -8,11 +15,14 @@ class RaceController(
     val raceModel: RaceModel,
     val raceView: RaceView,
 ) {
-    fun runGame() {
+    suspend fun runGame() {
         val carList = initCarList()
         val goal = initGoal()
-        runRound(carList, goal)
-        runAward(carList)
+        try {
+            runRound(carList, goal)
+        } catch (_: CancellationException) {
+            runAward(carList, goal)
+        }
     }
 
     private fun initCarList(): List<Car> {
@@ -29,7 +39,7 @@ class RaceController(
     private fun initGoal(): Int {
         while (true) {
             try {
-                raceView.showRoundInitMsg()
+                raceView.showGoalInitMsg()
                 return raceModel.initGoal(readln())
             } catch (e: IllegalArgumentException) {
                 handleError(e)
@@ -37,18 +47,32 @@ class RaceController(
         }
     }
 
-    private fun runRound(carList: List<Car>, goal: Int) {
+    private suspend fun runRound(
+        carList: List<Car>,
+        goal: Int,
+    ) = coroutineScope {
         raceView.showRoundResult()
-        repeat(goal) {
+        launch(Dispatchers.Default) {
             carList.forEach {
-                raceModel.runRound(it)
+                launch {
+                    while (isActive) {
+                        ensureActive()
+                        raceModel.runRound(it)
+                        raceView.showCarStatus(it)
+                        if (it.checkWinner(goal)) {
+                            this@coroutineScope.cancel()
+                        }
+                    }
+                }
             }
-            raceView.showEachRoundResult(carList)
         }
     }
 
-    private fun runAward(carList: List<Car>) {
-        val winners = raceModel.getWinners(carList)
+    private fun runAward(
+        carList: List<Car>,
+        goal: Int,
+    ) {
+        val winners = raceModel.getWinners(carList, goal)
         raceView.showWinners(winners)
     }
 

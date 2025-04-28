@@ -1,6 +1,7 @@
 package model
 
 import entity.Car
+import kotlinx.coroutines.delay
 
 class RaceModel {
     fun initCarList(input: String): List<Car> {
@@ -25,16 +26,17 @@ class RaceModel {
         }
     }
 
-    fun runRound(car: Car): Car {
-        val random = (0..9).random()
-        if (random >= 4) {
-            car.move()
-        }
+    suspend fun runRound(car: Car): Car {
+        val random = (0..500).random().toLong()
+        delay(random)
+        car.move()
         return car
     }
 
-    fun getWinners(carList: List<Car>): List<String> {
-        val maxDist = carList.maxOfOrNull { it.distance } ?: throw IllegalStateException("자동차가 없습니다.")
-        return carList.filter { it.distance == maxDist }.map { it.name }
+    fun getWinners(
+        carList: List<Car>,
+        goal: Int,
+    ): List<String> {
+        return carList.filter { it.distance == goal }.map { it.name }
     }
 }

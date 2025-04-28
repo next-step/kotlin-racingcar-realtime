@@ -7,4 +7,6 @@ data class Car(
     fun move() {
         distance++
     }
+
+    fun checkWinner(goal: Int) = (goal <= distance)
 }
