@@ -13,8 +13,8 @@ class RacingCar(
         }
     }
 
-    suspend fun moveForward(delayTime: Int) {
-        delay(delayTime.milliseconds)
+    suspend fun moveForward() {
+        delay(RandomMovingRule.getDelayTime().milliseconds)
         position ++
     }
 
