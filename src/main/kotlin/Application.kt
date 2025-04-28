@@ -9,11 +9,15 @@ fun main() {
     val distance = InputView.getDistance()
 
     val racingCarService = RealtimeRacingCarService()
-    runBlocking(Dispatchers.IO) {
-        cars.forEach {
-            launch {
-                racingCarService.start(it, distance)
+    try {
+        runBlocking {
+            cars.forEach {
+                launch(Dispatchers.IO) {
+                    racingCarService.start(it, distance)
+                }
             }
         }
+    } catch(e: IllegalArgumentException) {
+
     }
 }

@@ -11,7 +11,10 @@ class RealtimeRacingCarService {
             delay(randomDelay)
             car.move()
             car.printCurrentPosition()
+            if (car.position == distance) {
+                car.printWinner()
+                throw IllegalArgumentException("최종 우승자 발생")
+            }
         }
-        car.printWinner()
     }
 }
