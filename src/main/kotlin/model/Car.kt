@@ -1,7 +1,16 @@
 package model
 
-data class Car(val name: String, var positon: Int) {
+data class Car(val name: String, var position: Int) {
     fun move() {
-        positon++
+        position++
+    }
+
+    fun printCurrentPosition() {
+        println("${name} : ${"-".repeat(position)}")
+    }
+
+    fun printWinner() {
+        println()
+        println("최종 우승자 : ${name}")
     }
 }
