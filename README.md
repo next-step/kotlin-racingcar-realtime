@@ -26,8 +26,15 @@ car3 : -
 car2 : --
 car2 : ---
 car3 : --
+
+(사용자 엔터 입력)
+add car4
+car4 참가 완료!
+
+car4 : -
 car1 : --
 car2 : ----
+car4 : --
 car3 : ---
 car1 : ---
 car2 : -----

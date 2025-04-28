@@ -1,18 +1,16 @@
 package model
 
 import kotlinx.coroutines.delay
-import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
 
-class Car(
-    val carName: String
+data class Car(
+    val carName: String,
+    var position: Int = 0,
 ) {
-    var nowPosition = 0
-
     suspend fun move() {
-
-        nowPosition++
-
-        println("${carName} : ${"-".repeat(nowPosition)}")
+        val duration = (0..500).random().milliseconds
+        delay(duration)
+        position++
+        println("$carName : ${"-".repeat(position)}")
     }
 }

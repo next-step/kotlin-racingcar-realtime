@@ -1,6 +1,8 @@
 import controller.RaceController
+import kotlinx.coroutines.runBlocking
 
-suspend fun main() {
-    val raceController = RaceController()
-    raceController.run()
-}
+fun main() =
+    runBlocking {
+        val raceController = RaceController()
+        raceController.run()
+    }

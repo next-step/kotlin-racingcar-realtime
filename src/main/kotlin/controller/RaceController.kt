@@ -1,53 +1,36 @@
 package controller
 
-import model.Car
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import model.Car
+import model.Race
 import view.InputView
-import kotlin.random.Random
-import kotlin.time.Duration.Companion.milliseconds
 
 class RaceController {
     val inputView = InputView()
-    val carLists: MutableList<Car> = mutableListOf()
 
-    suspend fun run() {
-        val nameLists = inputView.getCarNames()
-        val goalDistance = inputView.getGoalDistance()
-
-        nameLists.forEach {
-            carLists.add(Car(it))
-        }
-
+    fun run() =
         runBlocking {
-            val jobList: MutableList<Job> = mutableListOf()
+            val nameLists = inputView.getCarNames()
+            val goalDistance = inputView.getGoalDistance()
 
-            var raceEnded = false
-            for (index in carLists.indices) {
-                val job = launch(Dispatchers.Default) {
-                    while (isActive && !raceEnded) {
-                        val randomNum = Random.Default.nextInt(0, 501)
-                        delay(randomNum.milliseconds)
-                        carLists[index].move()
+            val carLists = nameLists.map(::Car)
+            val race = Race(carLists, goalDistance)
 
-                        if (goalDistance <= carLists[index].nowPosition) {
-                            raceEnded = true
-                            jobList.forEach { it.cancel() }
-                            cancel()
-                        }
+            launch(Dispatchers.IO) {
+                while (true) {
+                    val input = readLine()
+
+                    // 엔터만 입력되었을 때
+                    if (input.isNullOrEmpty()) {
+                        println("엔터를 눌렀습니다! 특정 행동을 수행합니다.")
+                        break // 원하는 행동을 수행한 후 종료
+                    } else {
+                        println("입력값: $input")
                     }
                 }
-                jobList.add(job)
             }
-
-            jobList.forEach { it.join() }
+            race.start()
         }
-
-        println("END RACE")
-    }
 }

@@ -1,4 +1,3 @@
-package view
+// package view
 
-class outputView {
-}
+// class outputView
