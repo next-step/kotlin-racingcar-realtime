@@ -21,7 +21,7 @@ class InputView {
     }
 
     // 사용자로부터 목표 거리를 입력받고 유효성 검증
-    fun getRoundCount(): Int {
+    fun getGoalDistance(): Int {
         while (true) {
             println("목표 거리를 입력하세요.")
             val input = readlnOrNull()
