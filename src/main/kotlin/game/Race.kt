@@ -1,10 +1,8 @@
 package game
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.joinAll
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration.Companion.milliseconds
 
 class Race(
     private val participants: List<Car>,
@@ -27,7 +25,20 @@ class Race(
             }
         }
 
+        checkGameEnd(jobs)
         jobs.joinAll()
+    }
+
+    private suspend fun checkGameEnd(jobs: List<Job>) = coroutineScope {
+        launch {
+            while (isActive) {
+                if (gameEndFlag.get()) {
+                    jobs.forEach { it.cancel() }
+                    break
+                }
+            }
+            delay(100.milliseconds)
+        }
     }
 
     fun getWinners(): List<String> {
