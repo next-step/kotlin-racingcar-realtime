@@ -1,5 +1,6 @@
 package race
 
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import model.Car
 import model.Race
@@ -15,5 +16,6 @@ fun main() {
 
         val race = Race(carList, goalDistance)
         race.start()
+
     }
 }
