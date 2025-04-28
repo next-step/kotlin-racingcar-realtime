@@ -4,7 +4,6 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import model.Car
 import model.Race
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 class RaceAppKtTest {

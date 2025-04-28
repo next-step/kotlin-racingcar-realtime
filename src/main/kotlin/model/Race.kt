@@ -26,7 +26,7 @@ class Race(
     }
 
     private suspend fun move(car: Car) {
-        while (NonCancellable.isActive && car.position < goal) {
+        while (car.position < goal) {
             yield() // 스코프 취소됐을때 while문 벗어나기 위함
             car.move()
             if (car.position == goal) {
