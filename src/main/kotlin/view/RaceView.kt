@@ -11,10 +11,10 @@ class RaceView {
         println("시도할 회수는 몇회인가요?")
     }
 
-
     fun showRoundResult() {
         println("\n실행 결과")
     }
+
     fun showEachRoundResult(carList: List<Car>) {
         carList.forEach {
             val sb = StringBuilder()

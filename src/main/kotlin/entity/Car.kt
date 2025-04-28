@@ -1,6 +1,6 @@
 package entity
 
-data class Car (
+data class Car(
     val name: String,
     var distance: Int,
 ) {

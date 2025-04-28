@@ -3,7 +3,7 @@ package controller
 import model.RaceModel
 import view.RaceView
 
-class RaceController (
+class RaceController(
     val raceModel: RaceModel,
     val raceView: RaceView,
 ) {
