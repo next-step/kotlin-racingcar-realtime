@@ -1,5 +1,6 @@
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import model.Car
@@ -12,8 +13,8 @@ class RaceAppKtTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
 
         val cars = listOf(
-            Car("car1", 0),
-            Car("car2", 0),
+            Car("car1"),
+            Car("car2"),
             Car("car3", 9),
         )
         val goal = 10
@@ -21,8 +22,13 @@ class RaceAppKtTest {
 
         race.start()
 
-        val winner = race.cars.first() {it.position == goal}.shouldNotBeNull()
+        val winner = race.cars.firstOrNull() {
+            println("car - $it")
+            it.position == goal
+        }
 
-        winner.name shouldBe "car3"
+        println("winner : $winner")
+        winner?.name shouldBe "car3"
     }
+
 }
