@@ -34,5 +34,7 @@ class RacingView {
         }
     }
 
+    fun positionView(car: Car) = println(car)
+
     fun resultView(car: Car) = println("${car.name}가 최종 우승했습니다.")
 }
