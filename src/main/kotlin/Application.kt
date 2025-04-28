@@ -8,5 +8,8 @@ fun main() =
         val model = RaceModel()
         val view = RaceView()
         val controller = RaceController(model, view)
-        controller.runGame()
+        val carList = controller.initCarList()
+        val goal = controller.initGoal()
+        controller.runRound(carList, goal)
+        controller.runAward(carList, goal)
     }

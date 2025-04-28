@@ -1,12 +1,13 @@
 package controller
 
 import entity.Car
-import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import model.RaceModel
 import view.RaceView
@@ -15,17 +16,7 @@ class RaceController(
     val raceModel: RaceModel,
     val raceView: RaceView,
 ) {
-    suspend fun runGame() {
-        val carList = initCarList()
-        val goal = initGoal()
-        try {
-            runRound(carList, goal)
-        } catch (_: CancellationException) {
-            runAward(carList, goal)
-        }
-    }
-
-    private fun initCarList(): List<Car> {
+    fun initCarList(): List<Car> {
         while (true) {
             try {
                 raceView.showCarInitMsg()
@@ -36,7 +27,7 @@ class RaceController(
         }
     }
 
-    private fun initGoal(): Int {
+    fun initGoal(): Int {
         while (true) {
             try {
                 raceView.showGoalInitMsg()
@@ -47,28 +38,27 @@ class RaceController(
         }
     }
 
-    private suspend fun runRound(
+    suspend fun runRound(
         carList: List<Car>,
         goal: Int,
-    ) = coroutineScope {
+        scope: CoroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    ) {
         raceView.showRoundResult()
-        launch(Dispatchers.Default) {
-            carList.forEach {
-                launch {
-                    while (isActive) {
-                        ensureActive()
-                        raceModel.runRound(it)
-                        raceView.showCarStatus(it)
-                        if (it.checkWinner(goal)) {
-                            this@coroutineScope.cancel()
-                        }
+        carList.map {
+            scope.launch {
+                while (isActive) {
+                    ensureActive()
+                    raceModel.runRound(it)
+                    raceView.showCarStatus(it)
+                    if (it.isFinished(goal)) {
+                        scope.cancel()
                     }
                 }
             }
-        }
+        }.joinAll()
     }
 
-    private fun runAward(
+    fun runAward(
         carList: List<Car>,
         goal: Int,
     ) {

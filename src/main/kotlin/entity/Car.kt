@@ -8,5 +8,5 @@ data class Car(
         distance++
     }
 
-    fun checkWinner(goal: Int) = (goal <= distance)
+    fun isFinished(goal: Int) = (goal <= distance)
 }
