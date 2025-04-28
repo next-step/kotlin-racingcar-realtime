@@ -1,6 +1,5 @@
 package race
 
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import model.Car
 import model.Race
