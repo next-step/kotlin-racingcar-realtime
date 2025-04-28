@@ -1,44 +1,31 @@
 package game
 
 import kotlinx.coroutines.*
-import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.time.Duration.Companion.milliseconds
 
 class Race(
-    private val participants: List<Car>,
-    private val destinationDistance: Int,
+    val participants: List<Car>,
+    val destinationDistance: Int,
+    val dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
-    private val gameEndFlag = AtomicBoolean(false)
+    private val scope = CoroutineScope(dispatcher + SupervisorJob())
+    private lateinit var jobs: List<Job>
 
-    suspend fun start() = coroutineScope {
-        val jobs = participants.map {
-            launch(Dispatchers.Default) {
-                while (!gameEndFlag.get()) {
+    suspend fun start() {
+        jobs = participants.map {
+            scope.launch {
+                while (isActive && !it.isArrived(destinationDistance)) {
                     it.move()
-                    it.printDistance()
+                    it.printPosition()
 
                     if (it.isArrived(destinationDistance)) {
-                        gameEndFlag.set(true)
+                        scope.cancel() // scope 내 모든 코루틴 취소
                         break
                     }
                 }
             }
         }
 
-        checkGameEnd(jobs)
         jobs.joinAll()
-    }
-
-    private suspend fun checkGameEnd(jobs: List<Job>) = coroutineScope {
-        launch {
-            while (isActive) {
-                if (gameEndFlag.get()) {
-                    jobs.forEach { it.cancel() }
-                    break
-                }
-            }
-            delay(100.milliseconds)
-        }
     }
 
     fun getWinners(): List<String> {

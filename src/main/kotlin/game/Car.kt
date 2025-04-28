@@ -1,23 +1,22 @@
 package game
 
 import kotlinx.coroutines.delay
-import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
 
 class Car(
     val name: String,
-    var distance: Int = 0,
+    var position: Int = 0,
 ) {
     suspend fun move() {
-        delay(Random.nextInt(0, 1001).milliseconds)
-        distance++
+        delay((0..500).random().milliseconds)
+        position++
     }
 
-    fun printDistance() {
-        println("[${Thread.currentThread().name}] $name: ${"-".repeat(distance)}")
+    fun printPosition() {
+        println("[${Thread.currentThread().name}] $name: ${"-".repeat(position)}")
     }
 
     fun isArrived(destinationDistance: Int): Boolean {
-        return distance == destinationDistance
+        return position == destinationDistance
     }
 }
