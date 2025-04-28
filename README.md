@@ -8,9 +8,9 @@
 
 ## 기능 구현 목록
 - Car MODEL 구현
-  - [ ] 이름, 위치 property
-  - [ ] 전진 function(조건: 각 자동차는 0ms ~ 500ms 사이의 랜덤한 시간 동안 delay한 후, 1칸 전진)
-  - [ ] 위치출력 function
+  - [x] 이름, 위치 property
+  - [x] 전진 function(조건: 각 자동차는 0ms ~ 500ms 사이의 랜덤한 시간 동안 delay한 후, 1칸 전진)
+  - [x] 위치출력 function
 - VIEW
   - [ ] 자동차 이름과 목표거리를 입력 받는 입력 console
   - [ ] 최종우승 차량을 출력하는 결과 console
