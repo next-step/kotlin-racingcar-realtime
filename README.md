@@ -15,9 +15,8 @@
   - [x] 자동차 이름과 목표거리를 입력 받는 입력 console
   - [x] 최종우승 차량을 출력하는 결과 console
 - CONTROLLER
-  - [ ] Model - View 연결
-  - [ ] 생성된 Car 객체관리
-  - [ ] Racing 함수
+  - [x] 경주할 자동차, 목표 거리 초기화
+  - [x] Racing 함수
 
 ```aiignore
 경주할 자동차 이름을 입력하세요.(이름은 쉼표(,) 기준으로 구분)
