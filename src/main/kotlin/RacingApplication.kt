@@ -1,5 +1,6 @@
 import controller.RacingController
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import view.RaceView
 
@@ -27,6 +28,14 @@ private fun initRound(raceController: RacingController) {
 private suspend fun startGame(raceController: RacingController) {
     coroutineScope {
         raceController.printStartGameMeesage()
-        raceController.startGame()
+        //raceController.startGame()
+        //raceController.startGameVer2()
+        launch {
+            raceController.startGameVer3()
+        }
+
+        launch {
+            raceController.addRacingCar()
+        }
     }
 }

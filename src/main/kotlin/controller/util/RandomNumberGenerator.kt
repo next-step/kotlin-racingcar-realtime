@@ -4,5 +4,5 @@ import kotlin.random.Random
 
 
 object RandomNumberGenerator {
-    fun generateRandomNumber() = Random.nextInt(0, 501)
+    fun generateRandomNumber() = Random.nextInt(1000, 3001)
 }
