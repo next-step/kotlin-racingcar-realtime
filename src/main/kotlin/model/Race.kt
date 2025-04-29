@@ -4,88 +4,177 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.NonCancellable.isActive
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.yield
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.coroutines.coroutineContext
 
 class Race(
-    val cars: List<Car>,
+    cars: List<Car>,
     val goalDistance: Int,
-    val dispatcher: CoroutineDispatcher = Dispatchers.Default,
+//    private val inputChannel: Channel<String> = Channel(Channel.UNLIMITED),
+    private val channel: Channel<Car> = Channel(Channel.UNLIMITED),
+    dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
-    private val scope = CoroutineScope(dispatcher + SupervisorJob())
-    var inputChannel = Channel<String>()
-    var isPaused = AtomicBoolean(false)
+    private val _cars: MutableList<Car> = cars.toMutableList()
+    val cars: List<Car>
+        get() = _cars.toList()
+
+    private val scope: CoroutineScope = CoroutineScope(dispatcher + SupervisorJob())
+    val isPaused: AtomicBoolean = AtomicBoolean(false)
+
     var jobs: MutableList<Job> = mutableListOf()
 
+//    suspend fun start() {
+// //        val nowJob =
+//        _cars.forEach {
+//            scope.launch { move(it) }
+//        }
+//
+// //        jobs.addAll(nowJob)
+//
+//        scope.launch {
+//            while (true) {
+//                if (isPaused.get()) {
+//                    break
+//                }
+//
+//                readLine() ?: break
+//                isPaused.set(true)
+//                val input = readLine() ?: break
+//
+//                if (input.isEmpty()) {
+//                    isPaused.set(false)
+//                } else if (input.startsWith("add ")) {
+//                    val carName = input.replace("add ", "")
+//                    channel.send(Car(carName))
+//                } else {
+//                    isPaused.set(false)
+//                }
+//            }
+//        }
+//
+//        scope.launch {
+//            for (newCar in channel) {
+//                println("새 참가자: ${newCar.carName}")
+//                val newJob = scope.launch { move(newCar) }
+//                jobs.add(newJob)
+//
+//                isPaused.set(false)
+//            }
+//        }
+//        jobs.joinAll()
+//    }
+
     suspend fun start() {
-        val nowJob =
-            cars.map {
-                scope.launch { move(it) }
-            }
+        coroutineScope {
+            val raceJob = launch { launchRace() }
+            val inputJob = launch { launchInput() }
+            val monitorJob = launch { monitorRace() }
 
-        jobs.addAll(nowJob)
+            raceJob.join()
+            inputJob.join()
+            monitorJob.join()
+        }
+    }
 
-        scope.launch {
-            while (true) {
-                if (isPaused.get()) {
-                    break
-                }
+    private fun launchRace() {
+        _cars.forEach {
+            scope.launch { move(it) }
+        }
+    }
 
-                readLine() ?: break
-                println("1. 엔터 입력, isPause:${isPaused.get()} ")
-                isPaused.set(true)
-                println("1. 엔터 입력, isPause:${isPaused.get()} ")
-
-//                jobs.forEach { it.cancel() }
-
-                println("(사용자 엔터 입력)")
-                var input = readLine() ?: break
-
-                if (input.isEmpty()) {
-                    isPaused.set(false)
-                } else if (input.startsWith("add ")) {
-                    println("2. input send, isPause:${isPaused.get()} ")
-                    inputChannel.send(input.replace("add ", ""))
-                } else {
-                    isPaused.set(false)
+    private suspend fun monitorRace() {
+        while (coroutineContext.isActive) { // 제어권을 넘겨주기 위한 용도
+            while (!channel.isEmpty) {
+                val car = channel.receive()
+                println("${car.carName} 참가 완료!")
+                _cars.add(car)
+                scope.launch {
+                    move(car)
                 }
             }
         }
+    }
 
-        // 채널을 consume하는 역할
+    private fun launchInput() {
         scope.launch {
-            for (carName in inputChannel) {
-                val newCar = Car(carName)
-                println("새 참가자: ${newCar.carName}")
-
-                val newJob = scope.launch { move(newCar) }
-                jobs.add(newJob)
-
-                isPaused.set(false)
+            while (isActive) {
+                val input = readlnOrNull()
+                if (input != null) {
+                    pauseRace()
+                    enterInput()
+                    resumeRace()
+                }
             }
         }
+    }
 
-        jobs.joinAll()
+    private suspend fun enterInput() {
+        val input = readln()
+
+        if (input.isEmpty()) {
+            return
+        }
+
+        if (input.isNotEmpty()) {
+            val inputList = input.split(' ')
+            if (inputList.size < 2) {
+                println("다시 입력해주세요.")
+                enterInput()
+                return
+            }
+
+            val command = inputList[0]
+            val carName = inputList[1]
+
+            if (command == "add") {
+                channel.send(Car(carName))
+            }
+        }
+    }
+
+    private fun pauseRace() {
+        isPaused.set(true)
+    }
+
+    private fun resumeRace() {
+        isPaused.set(false)
     }
 
     private suspend fun move(car: Car) {
-        while (isActive && car.position < goalDistance) {
-            while (isPaused.get()) {
-                yield()
-            }
-            yield()
-            car.move()
-            if (car.position == goalDistance) {
-                println("${car.carName}가 최종 우승했습니다.")
-                inputChannel.close()
-                scope.cancel()
+        while (coroutineContext.isActive && car.position < goalDistance) {
+            if (!isPaused.get()) {
+                car.move()
+                car.checkWinner()
             }
         }
     }
+
+    private fun Car.checkWinner() {
+        if (position == goalDistance) {
+            println("${carName}가 최종 우승했습니다.")
+            scope.cancel()
+//            channel.close()
+        }
+    }
+
+//    private suspend fun moveMine(car: Car) {
+//        while (coroutineContext.isActive && car.position < goalDistance) {
+//            while (isPaused.get()) {
+//                yield()
+//            }
+//            yield()
+//            car.move()
+//            if (car.position == goalDistance) {
+//                println("${car.carName}가 최종 우승했습니다.")
+//                channel.close()
+//                scope.cancel()
+//            }
+//        }
+//    }
 }
