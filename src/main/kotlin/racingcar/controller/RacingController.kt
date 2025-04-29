@@ -45,13 +45,12 @@ class RacingController(
             if (!isPaused.get()) {
                 yield() // while 이 종료되는 시점이 car.forward 내부의 delay 에 걸리기 전에 종료
                 car.forward()
-                racingView.positionView(car)
-                car.getTheGoal()
+                car.competeWinner()
             }
         }
     }
 
-    private fun Car.getTheGoal() {
+    private fun Car.competeWinner() {
         if (this.position >= goal) {
             racingView.resultView(this)
             scope.cancel()

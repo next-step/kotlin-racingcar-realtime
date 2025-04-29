@@ -1,16 +1,22 @@
 package racingcar.model
 
 import kotlinx.coroutines.delay
-import kotlin.random.Random
+import racingcar.view.RacingView
+import kotlin.time.Duration.Companion.milliseconds
 
 data class Car(
     val name: String,
-    var speed: Int = 1,
+    var speed: Double = 1.0,
     var position: Int = 0,
+    var isStop: Boolean = false,
 ) {
     suspend fun forward() {
-        delay(Random.nextLong(0, 501))
-        position += speed
+        val duration = (0..500).random().toDouble() / speed
+        delay(duration.milliseconds)
+        if (!isStop) {
+            position++
+            RacingView().positionView(this)
+        }
     }
 
     fun slow() {
@@ -22,11 +28,11 @@ data class Car(
     }
 
     fun stop() {
-        speed = 0
+        isStop = true
     }
 
     fun start() {
-        speed = 1
+        isStop = false
     }
 
     override fun toString(): String = "$name : ${"-".repeat(position)}"
