@@ -1,15 +1,7 @@
 package racingcar.model
 
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.joinAll
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.coroutineContext
@@ -24,18 +16,20 @@ class Race(
     val cars: List<Car>
         get() = _cars.toList() // 외부에 링크할 때도 컬렉션의 헤드를 끊어버리기 위해 toList()
 
-    private val raceScope = CoroutineScope(dispatcher + SupervisorJob())
+    private val raceScope = CoroutineScope(dispatcher)
     private val isPaused = AtomicBoolean(false)
 
     suspend fun startRace() {
-        launchRace()
-        launchInput()
-        readyForNewCar()
+        raceScope.launch {
+            launchRace()
+            launchInput()
+            readyForNewCar()
+        }.join()
     }
 
-    private fun launchRace() {
+    private suspend fun launchRace() = raceScope.launch{
         _cars.map { car ->
-            raceScope.launch {
+            launch {
                 goCar(car)
             }
         }
@@ -44,12 +38,18 @@ class Race(
     private fun launchInput() {
         raceScope.launch(Dispatchers.IO) {
             while (coroutineContext.isActive) {
-                val input = readlnOrNull()
-                if (input != null && input.isNotBlank()) {
-                    isPaused.set(true)  // 입력받기 전에 멈춤
+                val input = readln()
 
-                    val newCar = Car(input)
-                    channel.send(newCar)
+                if (input.isEmpty()) {
+                    isPaused.set(true)  // 입력받기 전에 멈춤
+                    val inputCarName  = readln()
+
+                    if (inputCarName.startsWith("add ")) {
+                        val newCarName = inputCarName.removePrefix("add ").trim()
+                        val newCar = Car(newCarName)
+                        channel.send(newCar)
+                    }
+
                 }
                 isPaused.set(false)  // 입력 끝나고 다시 달림
             }
@@ -57,7 +57,9 @@ class Race(
     }
 
     private suspend fun readyForNewCar() {
+
         while (coroutineContext.isActive) {
+
             while (!channel.isEmpty) {
                 val newCar = channel.receive()
                 println("${newCar.name} 참가 완료!")
