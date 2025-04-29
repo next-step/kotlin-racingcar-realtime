@@ -2,9 +2,7 @@ package model
 
 import entity.Car
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.time.Duration.Companion.milliseconds
 
 class RaceModel {
     val carMap = ConcurrentHashMap<String, Car>()
@@ -49,7 +47,6 @@ class RaceModel {
     }
 
     suspend fun runRound(car: Car): Car {
-        delay((0..500).random().milliseconds)
         car.move()
         return car
     }

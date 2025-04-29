@@ -16,11 +16,23 @@ class RaceView {
     }
 
     fun showCarStatus(car: Car) {
-        println("${car.name} : ${"-".repeat(car.distance)}")
+        println("${car.name} : ${"-".repeat(car.distance)} (speed: ${car.speed})")
     }
 
     fun addCarMsg(name: String) {
         println("$name 참가 완료!\n")
+    }
+
+    fun boostCarMsg(name: String) {
+        println("$name 속도 2배 증가!\n")
+    }
+
+    fun slowCarMsg(name: String) {
+        println("$name 속도 2배 감소!\n")
+    }
+
+    fun stopCarMsg(name: String) {
+        println("$name 정지!\n")
     }
 
     fun showWinner(winner: Car) {

@@ -20,7 +20,6 @@ class RaceController(
     val raceView: RaceView,
     dispatcher: CoroutineContext = (Dispatchers.Default + SupervisorJob()),
 ) {
-    val pauseChannel = Channel<String>()
     val carChannel = Channel<Car>(Channel.UNLIMITED)
     val scope = CoroutineScope(dispatcher)
     val isPause = AtomicBoolean(false)
@@ -65,7 +64,7 @@ class RaceController(
         goal: Int,
     ) {
         scope.launch {
-            while (isActive) {
+            while (isActive && !car.isStop) {
                 if (!isPause.get()) {
                     ensureActive()
                     raceModel.runRound(car)
@@ -74,7 +73,6 @@ class RaceController(
                         raceView.showWinner(car)
                         isPause.set(false)
                         scope.cancel()
-                        pauseChannel.close()
                         carChannel.close()
                     }
                 }
@@ -103,13 +101,34 @@ class RaceController(
     }
 
     suspend fun parseOperation(input: String) {
-        if (input.isEmpty()) throw IllegalArgumentException("입력된 명령이 없습니다.")
+        if (input.isEmpty()) return
         val operation = input.split(" ")
         if (operation.size != 2) throw IllegalArgumentException("올바른 명령이 아닙니다.")
         when (operation[0]) {
             "add" -> {
                 raceModel.initCar(operation[1], carChannel)
                 raceView.addCarMsg(operation[1])
+            }
+            "boost" -> {
+                raceModel.carMap.getOrElse(
+                    operation[1],
+                    { throw IllegalArgumentException("${operation[1]}이 존재하지 않습니다.") },
+                ).boost()
+                raceView.boostCarMsg(operation[1])
+            }
+            "slow" -> {
+                raceModel.carMap.getOrElse(
+                    operation[1],
+                    { throw IllegalArgumentException("${operation[1]}이 존재하지 않습니다.") },
+                ).slow()
+                raceView.slowCarMsg(operation[1])
+            }
+            "stop" -> {
+                raceModel.carMap.getOrElse(
+                    operation[1],
+                    { throw IllegalArgumentException("${operation[1]}이 존재하지 않습니다.") },
+                ).stop()
+                raceView.stopCarMsg(operation[1])
             }
             else -> throw IllegalArgumentException("알 수 없는 명령어입니다.")
         }
