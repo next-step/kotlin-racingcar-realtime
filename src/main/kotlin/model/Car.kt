@@ -1,8 +1,6 @@
 package model
 
 import kotlinx.coroutines.delay
-import kotlin.ranges.random
-import kotlin.text.repeat
 import kotlin.time.Duration.Companion.milliseconds
 
 data class Car(
