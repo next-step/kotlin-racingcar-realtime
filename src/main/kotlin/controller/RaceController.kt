@@ -7,7 +7,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -16,7 +15,6 @@ import model.RaceModel
 import view.RaceView
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.CoroutineContext
-import kotlin.time.Duration.Companion.milliseconds
 
 class RaceController(
     val raceModel: RaceModel,
@@ -68,19 +66,17 @@ class RaceController(
     ) {
         scope.launch {
             while (isActive) {
-                ensureActive()
-                while (isPause.get()) {
-                    delay(100.milliseconds)
-                    continue
-                }
-                raceModel.runRound(car)
-                raceView.showCarStatus(car)
-                if (car.isFinished(goal)) {
-                    raceView.showWinner(car)
-                    isPause.set(false)
-                    scope.cancel()
-                    pauseChannel.close()
-                    carChannel.close()
+                if (!isPause.get()) {
+                    ensureActive()
+                    raceModel.runRound(car)
+                    raceView.showCarStatus(car)
+                    if (car.isFinished(goal)) {
+                        raceView.showWinner(car)
+                        isPause.set(false)
+                        scope.cancel()
+                        pauseChannel.close()
+                        carChannel.close()
+                    }
                 }
             }
         }
