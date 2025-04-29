@@ -52,9 +52,10 @@ class Car() {
 
         fun createCar(carList: List<String>) {
             carList.forEach { it ->
-                val findCar = mCarList.find { car ->
-                    car.mName == it
-                }
+                val findCar =
+                    mCarList.find { car ->
+                        car.mName == it
+                    }
                 if (findCar != null) {
                     throw IllegalArgumentException("[ERROR] 중복된 차동차 이름 입니다.")
                 }
