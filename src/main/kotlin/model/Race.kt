@@ -15,7 +15,7 @@ import kotlin.coroutines.coroutineContext
 class Race(
     cars: List<Car>,
     val goalDistance: Int,
-    private val channel: Channel<Car> = Channel(Channel.UNLIMITED),
+    private val channel: Channel<CarEvent> = Channel(Channel.UNLIMITED),
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
     private val _cars: MutableList<Car> = cars.toMutableList()
@@ -39,19 +39,44 @@ class Race(
 
     private fun launchRace() {
         _cars.forEach {
-            scope.launch { move(it) }
+            scope.launch {
+                move(it)
+            }
+        }
+    }
+
+    private fun boost(car: Car) {
+        _cars.forEach {
+            if (it.equals(car.carName)) {
+                println(car.carName)
+                it.boostSpeed()
+            }
         }
     }
 
     private suspend fun monitorRace() {
         while (coroutineContext.isActive) { // 제어권을 넘겨주기 위한 용도
             while (!channel.isEmpty) {
-                val car = channel.receive()
-                println("${car.carName} 참가 완료!")
-                _cars.add(car)
-                scope.launch {
-                    move(car)
+                val carEvent = channel.receive()
+
+                when(carEvent) {
+                    is CarEvent.Add -> {
+                        println("${carEvent.car} 참가 완료!")
+                        _cars.add(carEvent.car) // 뭘까
+                        scope.launch {
+                            move(carEvent.car)
+                        }
+                    }
+                    is CarEvent.Boost -> {
+                        println("${carEvent.car} 속도가 상승됩니다!")
+                        boost(carEvent.car)
+                    }
                 }
+
+
+
+
+
             }
         }
     }
@@ -78,31 +103,42 @@ class Race(
 
         if (input.isNotEmpty()) {
             val inputList = input.split(' ')
-            if (checkInput(inputList)) {
+            if (isInputAvailable(inputList)) {
+                val command = inputList[0]
+                val carName = inputList[1]
+
+                if (command.equals("add", ignoreCase = true)) channel.send(CarEvent.Add(Car(carName)))
+                else if (command.equals("boost", ignoreCase = true)) channel.send(CarEvent.Boost(Car(carName)))
+
+            } else {
                 println("다시 입력해주세요.")
                 enterInput()
                 return
             }
-            val command = inputList[0]
-            val carName = inputList[1]
-
-            if (command == "add") {
-                channel.send(Car(carName))
-            }
         }
     }
 
-    private fun checkInput(inputList: List<String>): Boolean {
+    private fun isInputAvailable(inputList: List<String>): Boolean {
         if (inputList.size < 2) { // 스페이스 유무 확인
-            return true
+            return false
         }
         if (inputList[1].length > 5) {
-            return true
+            return false
         }
-        if (inputList[0] != "add") {
-            return true
+        if (inputList[0] != "add" && inputList[0] != "boost") {
+            return false
         }
-        return false
+        if (inputList[0] == "add") {
+            _cars.forEach {
+                if (it.equals(inputList[1])) {
+                    return false
+                }
+            }
+        } else {
+
+        }
+
+        return true
     }
 
     private fun pauseRace() {
