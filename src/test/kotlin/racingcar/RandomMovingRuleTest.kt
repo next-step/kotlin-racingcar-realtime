@@ -7,9 +7,8 @@ import racingcar.model.RandomMovingRule
 class RandomMovingRuleTest {
 
     @Test
-    fun `0에서 500ms 랜덤 숫자가 출력된다`() {
+    fun `0에서 500ms 사이 랜덤 숫자가 출력된다`() {
         val randomTime = RandomMovingRule.getDelayTime()
-        assertThat(randomTime >= 0).isTrue()
-        assertThat(randomTime <= 500).isTrue()
+        assertThat(randomTime).isBetween(0, 500)
     }
 }

@@ -10,11 +10,8 @@ object RacingGameController {
     fun start() = runBlocking {
         val inputView = InputView()
 
-//        val carNames = inputView.getCarNames()
-//        val goalDistance = inputView.getGoalDistance()
-
-        val carNames = listOf("car1", "car2", "car3")
-        val goalDistance = 10
+        val carNames = inputView.getCarNames()
+        val goalDistance = inputView.getGoalDistance()
 
         val cars = carNames.map { Car(it) }.toMutableList()
         val channel = Channel<Car>(Channel.UNLIMITED)
