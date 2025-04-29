@@ -4,3 +4,10 @@ enum class RaceMode {
     SLOW,
     STOP,
 }
+
+enum class RaceCommand {
+    ADD,
+    BOOST,
+    SLOW,
+    STOP,
+}
