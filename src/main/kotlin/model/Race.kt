@@ -25,7 +25,7 @@ class Race(
     private val scope: CoroutineScope = CoroutineScope(dispatcher + SupervisorJob())
     val isPaused: AtomicBoolean = AtomicBoolean(false)
 
-    var jobs: MutableList<Job> = mutableListOf()
+    var carjobs: MutableMap<String, Job> = mutableMapOf()
 
     suspend fun start() {
         val raceJob = scope.launch { launchRace() }
@@ -39,16 +39,23 @@ class Race(
 
     private fun launchRace() {
         _cars.forEach {
-            scope.launch {
-                move(it)
-            }
+            carjobs[it.carName] =
+                scope.launch {
+                    move(it)
+                }
+        }
+    }
+
+    private fun add(car: Car) {
+        _cars.add(car) // 뭘까
+        carjobs[car.carName] = scope.launch {
+            move(car)
         }
     }
 
     private fun boost(car: Car) {
         _cars.forEach {
             if (it.equals(car.carName)) {
-                println(car.carName)
                 it.boostSpeed()
             }
         }
@@ -57,8 +64,15 @@ class Race(
     private fun slow(car: Car) {
         _cars.forEach {
             if (it.equals(car.carName)) {
-                println(car.carName)
                 it.slowSpeed()
+            }
+        }
+    }
+
+    private fun stop(car: Car) {
+        _cars.forEach {
+            if (it.equals(car.carName)) {
+                carjobs[car.carName]?.cancel()
             }
         }
     }
@@ -70,26 +84,22 @@ class Race(
 
                 when(carEvent) {
                     is CarEvent.Add -> {
-                        println("${carEvent.car} 참가 완료!")
-                        _cars.add(carEvent.car) // 뭘까
-                        scope.launch {
-                            move(carEvent.car)
-                        }
+                        println("${carEvent.car.carName}의 참가 완료!")
+                        add(carEvent.car)
                     }
                     is CarEvent.Boost -> {
-                        println("${carEvent.car} 속도가 상승됩니다!")
+                        println("${carEvent.car.carName}의 속도가 상승됩니다!")
                         boost(carEvent.car)
                     }
                     is CarEvent.Slow -> {
-                        println("${carEvent.car} 속도가 하락합니다!")
+                        println("${carEvent.car.carName}의 속도가 하락합니다!")
                         slow(carEvent.car)
                     }
+                    is CarEvent.Stop -> {
+                        println("${carEvent.car.carName}의 주행을 중단합니다!")
+                        stop(carEvent.car)
+                    }
                 }
-
-
-
-
-
             }
         }
     }
@@ -123,6 +133,12 @@ class Race(
                 if (command.equals("add", ignoreCase = true)) channel.send(CarEvent.Add(Car(carName)))
                 else if (command.equals("boost", ignoreCase = true)) channel.send(CarEvent.Boost(Car(carName)))
                 else if (command.equals("slow", ignoreCase = true)) channel.send(CarEvent.Slow(Car(carName)))
+                else if (command.equals("stop", ignoreCase = true)) channel.send(CarEvent.Stop(Car(carName)))
+                else {
+                    println("다시 입력해주세요.")
+                    enterInput()
+                    return
+                }
 
             } else {
                 println("다시 입력해주세요.")
@@ -139,7 +155,7 @@ class Race(
         if (inputList[1].length > 5) {
             return false
         }
-        if (inputList[0] != "add" && inputList[0] != "boost" && inputList[0] != "slow") {
+        if (inputList[0] != "add" && inputList[0] != "boost" && inputList[0] != "slow" && inputList[0] != "stop") {
             return false
         }
         if (inputList[0] == "add") {

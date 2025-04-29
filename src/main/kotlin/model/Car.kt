@@ -17,17 +17,14 @@ data class Car(
     }
 
     fun equals(other: String?): Boolean {
-        println("$carName : $other")
         return carName == other
     }
 
     fun boostSpeed() {
-        println("boostSpeed" + carName)
         duration /= 2
     }
 
     fun slowSpeed() {
-        println("slowSpeed" + carName)
         duration *= 2
     }
 }
