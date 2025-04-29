@@ -73,6 +73,11 @@ class Race(
                         jobs.get(stopCar.name)?.cancel()
                         jobs.remove(stopCar.name)
                         println("${stopCar.name} 차 정지!! " )
+
+                        if(_cars.isEmpty()) {
+                            println("모든 차가 정지되었습니다.")
+                            raceScope.cancel()
+                        }
                     }
 
                 }
@@ -81,10 +86,9 @@ class Race(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private suspend fun readyForNewCar() {
-
         while (coroutineContext.isActive) {
-
             while (!channel.isEmpty) {
                 val newCar = channel.receive()
                 println("${newCar.name} 참가 완료!")
