@@ -19,7 +19,6 @@ import kotlin.collections.filter
 import kotlin.collections.joinToString
 import kotlin.collections.map
 import kotlin.ranges.random
-import kotlin.text.repeat
 import kotlin.time.Duration.Companion.milliseconds
 
 class Race(
@@ -84,9 +83,11 @@ class Race(
     private suspend fun move(car: Car) {
         val duration = (0..500).random().milliseconds
         delay(duration)
+
         if (pauseState.get()) return
-        car.position++
-        println("${car.name}: ${"-".repeat(car.position)}")
+
+        car.moveForward()
+
         if (car.isWinner(goal)) {
             scope.cancel()
         }

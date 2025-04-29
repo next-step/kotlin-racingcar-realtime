@@ -4,7 +4,6 @@ import kotlin.collections.filter
 import kotlin.collections.map
 import kotlin.text.isNotEmpty
 import kotlin.text.split
-import kotlin.text.toInt
 import kotlin.text.trim
 
 object InputView {
@@ -25,6 +24,17 @@ object InputView {
 
     fun readGoal(): Int {
         println("목표 거리를 입력하세요.")
-        return readlnOrNull()?.toInt() ?: 0
+        while (true) {
+            val input = readlnOrNull()
+            input?.toIntOrNull()?.let { goal ->
+                if (goal > 0) {
+                    return goal
+                } else {
+                    println("목표 거리는 0보다 큰 숫자로 입력해주세요.")
+                }
+            } ?: run {
+                println("유효한 숫자를 입력해주세요.")
+            }
+        }
     }
 }
