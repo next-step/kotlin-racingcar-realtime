@@ -70,8 +70,8 @@ car2가 최종 우승했습니다.
 - 입력 없이 엔터를 치면 경주를 다시 재개한다.
 
 ### 기능 구현 목록
-- [ ] Model(Car)
-  - [ ] speed 프로퍼티 추가
-  - [ ] boost, slow, stop function 추가
+- [x] Model(Car)
+  - [x] speed 프로퍼티 추가
+  - [x] boost, slow, stop function 추가
 - [ ] Controller
   - [ ] 각 명령어 별 function 호출 및 출력
