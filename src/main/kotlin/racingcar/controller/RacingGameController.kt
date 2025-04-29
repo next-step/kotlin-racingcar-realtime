@@ -16,8 +16,8 @@ object RacingGameController {
         val carNames = listOf("car1", "car2", "car3")
         val goalDistance = 10
 
-        val cars = carNames.map { Car(it) }
-        val channel = Channel<String>(Channel.UNLIMITED)
+        val cars = carNames.map { Car(it) }.toMutableList()
+        val channel = Channel<Car>(Channel.UNLIMITED)
         val race = Race(cars, goalDistance, channel)
 
         race.startRace()
