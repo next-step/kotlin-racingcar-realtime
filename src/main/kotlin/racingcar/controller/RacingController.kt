@@ -75,9 +75,9 @@ class RacingController(
                 }
             } else {
                 try {
-                    val command = c.split(" ", limit = 2)
-                    if (command[0] != "add") {
-                        throw IllegalArgumentException("invalid command: ${command[0]}")
+                    val command = c.split(" ")
+                    if (command[0] != "add" || command.size > 2) {
+                        throw IllegalArgumentException("invalid command: $c")
                     }
                     val name = command[1]
                     if (_cars.map { it.name }.toList().contains(name)) {
