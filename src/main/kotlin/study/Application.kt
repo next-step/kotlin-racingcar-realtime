@@ -21,9 +21,9 @@ fun main() {
         val race = Race(cars, goal, channel)
 
         launch(Dispatchers.IO) {
-            while (race.isActive() && isActive) {
+            while (race.isGameInProgress() && isActive) {
                 InputView.readyCommand()
-                if (!race.isActive()) {
+                if (!race.isGameInProgress()) {
                     println("끝났어")
                 } else {
                     race.pauseRace()

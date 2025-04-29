@@ -44,7 +44,7 @@ class Race(
         printWinner()
     }
 
-    fun isActive(): Boolean = scope.isActive
+    fun isGameInProgress(): Boolean = scope.isActive
 
     private fun launchRace() {
         jobs =
@@ -74,9 +74,13 @@ class Race(
     }
 
     private fun analysisCommand(command: Command) {
+        if ("add" == command.command) {
+            addCar(Car(command.name))
+            return
+        }
+
         cars.first { it.name == command.name }.apply {
             when (command.command) {
-                "add" -> addCar(this)
                 "boost" -> this.boost()
                 "slow" -> this.slow()
                 "stop" -> this.stop()
