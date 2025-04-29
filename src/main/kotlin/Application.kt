@@ -2,7 +2,6 @@ import com.kmc.Car
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -81,7 +80,6 @@ suspend fun runRace(loopCount: Int) {
         Race.loopCount = loopCount
         Race.start()
         while (!Race.raceDone.get()) {
-            delay(1)
             if (restart) {
                 synchronized(Car) {
                     Race.reStart()
@@ -119,17 +117,21 @@ fun inputCar(): List<String> {
 }
 
 fun inputAddCar() {
-    try {
-        parseInput(readLine()!!)
-    } catch (_: Exception) {
-        throw IllegalArgumentException("[ERROR] 입력이 잘못되었습니다.")
+    var success = false
+    while (!success) {
+        try {
+            parseInput(readLine()!!)
+            success = true
+        } catch (e: Exception) {
+            println(e.message)
+        }
     }
 }
 
 fun parseInput(input: String) {
     val stringList = input.split(" ")
     if (stringList.size < 2 && input != "") {
-        throw IllegalArgumentException("[ERROR] 입력이 잘못되었습니다.")
+        throw IllegalArgumentException("[ERROR] 입력이 잘못되었습니다. add {차량이름}, boost {차량이름}, slow {차량이름}, stop {차량이름}")
     }
     runBlocking {
         when (stringList[0]) {
@@ -138,7 +140,7 @@ fun parseInput(input: String) {
             "slow" -> slowChannel.send(stringList[1])
             "stop" -> stopChannel.send(stringList[1])
             "" -> restart = true
-            else -> throw IllegalArgumentException("[ERROR] 입력이 잘못되었습니다.")
+            else -> throw IllegalArgumentException("[ERROR] 입력이 잘못되었습니다. add {차량이름}, boost {차량이름}, slow {차량이름}, stop {차량이름}")
         }
     }
 }
