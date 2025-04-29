@@ -7,7 +7,7 @@ class RaceController {
     suspend fun run() {
         // inputView로 구현
         val car = listOf(Car("car1", 0), Car("car2", 0))
-        val goal = 3
+        val goal = 10
 
         val race = Race(car, goal)
 
