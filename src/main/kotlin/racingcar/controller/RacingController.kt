@@ -55,6 +55,7 @@ class RacingController(
         if (this.position >= goal) {
             racingView.resultView(this)
             scope.cancel()
+            channel.close()
         }
     }
 
