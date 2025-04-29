@@ -6,7 +6,5 @@ class Car(val name: String, var position: Int = 0) {
         println("$name: ${"-".repeat(position)}")
     }
 
-    fun isRunning(goal: Int): Boolean = position < goal
-
-    fun isWinner(goal: Int): Boolean = !isRunning(goal)
+    fun isReachToGoal(goal: Int): Boolean = position >= goal
 }

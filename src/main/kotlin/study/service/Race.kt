@@ -13,7 +13,6 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import study.domain.Car
-import study.view.InputView
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.collections.filter
 import kotlin.collections.joinToString
@@ -24,58 +23,53 @@ import kotlin.time.Duration.Companion.milliseconds
 class Race(
     var cars: MutableList<Car>,
     val goal: Int = 0,
+    private val channel: Channel<Car>,
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
     private val scope = CoroutineScope(dispatcher + SupervisorJob())
     private lateinit var jobs: List<Job>
-    private val pauseState = AtomicBoolean(false)
+    private val isPaused = AtomicBoolean(false)
 
-    private val channel = Channel<Car>()
-
-    suspend fun start() {
+    fun readyRace() {
         jobs =
             cars.map {
                 makeCarJob(it)
             }
 
-        scope.launch((Dispatchers.IO)) {
-            while (isActive) {
-                readyAddCar()
-                producingAddCar()
-            }
-        }
-
         scope.launch(Dispatchers.IO) {
             for (car in channel) {
-                consumingAddCar(car)
+                addCar(car)
             }
         }
+    }
 
+    suspend fun startRace() {
         jobs.joinAll()
         printWinner()
         channel.close()
     }
 
-    private fun consumingAddCar(car: Car) {
+    fun pauseRace() {
+        isPaused.set(true)
+    }
+
+    fun resumeRace() {
+        isPaused.set(false)
+    }
+
+    private fun finishRace() {
+        scope.cancel()
+    }
+
+    private fun addCar(car: Car) {
         cars.add(car)
         jobs += makeCarJob(car)
         println("${car.name} 참가 완료!\n")
     }
 
-    private fun readyAddCar() {
-        InputView.readyAddCar()
-        pauseState.set(true) // 레이
-    }
-
-    private suspend fun producingAddCar() {
-        val addCar = Car(InputView.readAddCar())
-        channel.send(addCar)
-        pauseState.set(false)
-    }
-
     private fun makeCarJob(car: Car): Job =
         scope.launch {
-            while (car.isRunning(goal) && isActive) {
+            while (!car.isReachToGoal(goal) && coroutineContext.isActive) {
                 move(car)
             }
         }
@@ -83,18 +77,15 @@ class Race(
     private suspend fun move(car: Car) {
         val duration = (0..500).random().milliseconds
         delay(duration)
-
-        if (pauseState.get()) return
-
+        if (isPaused.get()) return
         car.moveForward()
-
-        if (car.isWinner(goal)) {
-            scope.cancel()
+        if (car.isReachToGoal(goal)) {
+            finishRace()
         }
     }
 
     private suspend fun printWinner() {
-        val winners = cars.filter { it.isWinner(goal) }.map { it.name }
+        val winners = cars.filter { it.isReachToGoal(goal) }.map { it.name }
         withContext(Dispatchers.IO) {
             println("\n${winners.joinToString(separator = ",", postfix = "가 최종 우승했습니다.")}")
         }

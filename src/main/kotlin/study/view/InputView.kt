@@ -20,7 +20,13 @@ object InputView {
         println("입력해")
     }
 
-    fun readAddCar(): String = readlnOrNull() ?: ""
+    fun readCommand(): Pair<String, String> {
+        val input = readlnOrNull() ?: ""
+        val parts = input.split(" ", limit = 2) // 최대 2개의 부분으로 분리 (명령어, 나머지)
+        val command = parts.getOrNull(0) ?: ""
+        val name = parts.getOrNull(1) ?: ""
+        return Pair(command, name)
+    }
 
     fun readGoal(): Int {
         println("목표 거리를 입력하세요.")

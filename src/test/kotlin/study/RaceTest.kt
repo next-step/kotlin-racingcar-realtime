@@ -24,10 +24,10 @@ class RaceTest {
             val race = Race(cars, goal, dispatcher)
 
             // when
-            race.start()
+            race.startRace()
 
             // then
-            race.cars.firstOrNull { it.isWinner(goal) }.shouldNotBeNull()
+            race.cars.firstOrNull { it.isReachToGoal(goal) }.shouldNotBeNull()
         }
 
     @Test
@@ -45,10 +45,10 @@ class RaceTest {
             val race = Race(cars, goal, dispatcher)
 
             // when
-            race.start()
+            race.startRace()
 
             // then
-            val winner = race.cars.firstOrNull { it.isWinner(goal) }
+            val winner = race.cars.firstOrNull { it.isReachToGoal(goal) }
             winner?.name shouldBe "car3"
         }
 }
