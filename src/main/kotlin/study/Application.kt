@@ -21,12 +21,16 @@ fun main() {
         val race = Race(cars, goal, channel)
 
         launch(Dispatchers.IO) {
-            while (isActive) {
+            while (race.isActive() && isActive) {
                 InputView.readyCommand()
-                race.pauseRace()
-                val (command, name) = InputView.readCommand()
-                channel.send(Command(command, name))
-                race.resumeRace()
+                if (!race.isActive()) {
+                    println("끝났어")
+                } else {
+                    race.pauseRace()
+                    val (command, name) = InputView.readCommand()
+                    channel.send(Command(command, name))
+                    race.resumeRace()
+                }
             }
         }
 

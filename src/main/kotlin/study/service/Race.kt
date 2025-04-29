@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.collections.filter
 import kotlin.collections.joinToString
 import kotlin.collections.map
+import kotlin.coroutines.coroutineContext
 import kotlin.ranges.random
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -41,8 +42,9 @@ class Race(
 
         jobs.joinAll()
         printWinner()
-        channel.close()
     }
+
+    fun isActive(): Boolean = scope.isActive
 
     private fun launchRace() {
         jobs =
@@ -72,23 +74,13 @@ class Race(
     }
 
     private fun analysisCommand(command: Command) {
-        if ("add" == command.command) {
-            addCar(Car(command.name))
-        } else if ("boost" == command.command) {
-            cars.filter { it.name == command.name }.forEach {
-                it.boost()
-            }
-        } else if ("slow" == command.command) {
-            cars.filter { it.name == command.name }.forEach {
-                it.slow()
-            }
-        } else if ("stop" == command.command) {
-            cars.filter { it.name == command.name }.forEach {
-                it.stop()
-            }
-        } else if ("resume" == command.command) {
-            cars.filter { it.name == command.name }.forEach {
-                it.resume()
+        cars.first { it.name == command.name }.apply {
+            when (command.command) {
+                "add" -> addCar(this)
+                "boost" -> this.boost()
+                "slow" -> this.slow()
+                "stop" -> this.stop()
+                "resume" -> this.resume()
             }
         }
     }
