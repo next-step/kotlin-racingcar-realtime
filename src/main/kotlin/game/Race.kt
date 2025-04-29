@@ -2,7 +2,6 @@ package game
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import java.util.concurrent.atomic.AtomicBoolean
 
 class Race(
@@ -40,7 +39,7 @@ class Race(
                     // 목표거리에 도달한 경우 다른 코루틴을 취소하여 경기 종료
                     if (car.isArrived(goal)) {
                         scope.cancel() // scope 내 모든 코루틴 취소
-                        channel.close()
+                        // channel.close()
                         break
                     }
                 }
@@ -66,14 +65,20 @@ class Race(
 
     private suspend fun monitorRace() {
         while (scope.isActive) {
-            try {
+            if (!channel.isEmpty) {
                 val car = channel.receive()
                 println("${car.name} 참가 완료!")
                 println()
                 move(car)
-            } catch (e: ClosedReceiveChannelException) {
-                println("=== channel is closed. ===")
             }
+//            try {
+//                val car = channel.receive()
+//                println("${car.name} 참가 완료!")
+//                println()
+//                move(car)
+//            } catch (e: ClosedReceiveChannelException) {
+//                println("=== channel is closed. ===")
+//            }
         }
     }
 
