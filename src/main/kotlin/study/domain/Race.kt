@@ -17,7 +17,7 @@ import kotlin.time.Duration.Companion.milliseconds
 class Race(
     cars: List<Car>,
     val goal: Int,
-    val channelRequirement: Channel<Requirement> = Channel(),
+    val channel: Channel<Requirement> = Channel(),
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
     private var _cars: MutableList<Car> = cars.toMutableList()
@@ -29,17 +29,17 @@ class Race(
     private var isPaused = AtomicBoolean(false)
 
     suspend fun start() {
-        println("실행 결과")
-        jobs = _cars.map(::signUpCar)
+        jobs = _cars.map(::createMovingCar)
 
         scope.launch(Dispatchers.IO) {
             while (isActive) {
-                for (requirement in channelRequirement) {
+                for (requirement in channel) {
                     runRequirement(requirement)
                 }
             }
         }
 
+        println("\n실행 결과")
         jobs.joinAll()
     }
 
@@ -55,7 +55,7 @@ class Race(
         if ("add" == requirement.command) {
             val car = Car(requirement.target)
             _cars.add(car)
-            jobs += signUpCar(car)
+            jobs += createMovingCar(car)
             println("${requirement.target} 참가 완료!\n")
             return
         }
@@ -70,7 +70,7 @@ class Race(
         }
     }
 
-    private fun signUpCar(car: Car): Job =
+    private fun createMovingCar(car: Car): Job =
         scope.launch {
             while (kotlin.coroutines.coroutineContext.isActive) {
                 moveCar(car)
