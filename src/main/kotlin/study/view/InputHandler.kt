@@ -1,6 +1,6 @@
 package study.view
 
-import study.domain.Contest.Requirement
+import study.domain.Requirement
 
 object InputHandler {
     fun readAnySignal() {

@@ -7,9 +7,9 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import study.domain.Contest.Car
-import study.domain.Contest.Race
-import study.domain.Contest.Requirement
+import study.domain.Car
+import study.domain.Race
+import study.domain.Requirement
 import study.view.InputHandler
 
 fun main() {
@@ -24,11 +24,11 @@ fun main() {
         requirementScope.launch {
             while (isActive) {
                 InputHandler.readAnySignal()
-                race.pause()
+                race.pauseRace()
 
                 val requirement = InputHandler.readRequirement()
                 channelRequirement.send(requirement)
-                race.resume()
+                race.resumeRace()
             }
         }
 
