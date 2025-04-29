@@ -13,6 +13,7 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import study.domain.Car
+import study.domain.Command
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.collections.filter
 import kotlin.collections.joinToString
@@ -21,32 +22,41 @@ import kotlin.ranges.random
 import kotlin.time.Duration.Companion.milliseconds
 
 class Race(
-    var cars: MutableList<Car>,
+    cars: List<Car>,
     val goal: Int = 0,
-    private val channel: Channel<Car>,
+    private val channel: Channel<Command>,
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
+    private val _cars: MutableList<Car> = cars.toMutableList()
+    val cars: List<Car>
+        get() = _cars.toList()
+
     private val scope = CoroutineScope(dispatcher + SupervisorJob())
     private lateinit var jobs: List<Job>
     private val isPaused = AtomicBoolean(false)
 
-    fun readyRace() {
-        jobs =
-            cars.map {
-                makeCarJob(it)
-            }
-
-        scope.launch(Dispatchers.IO) {
-            for (car in channel) {
-                addCar(car)
-            }
-        }
-    }
-
     suspend fun startRace() {
+        launchRace()
+        monitorCommand()
+
         jobs.joinAll()
         printWinner()
         channel.close()
+    }
+
+    private fun launchRace() {
+        jobs =
+            _cars.map {
+                makeCarJob(it)
+            }
+    }
+
+    private fun monitorCommand() {
+        scope.launch(Dispatchers.IO) {
+            for (command in channel) {
+                analysisCommand(command)
+            }
+        }
     }
 
     fun pauseRace() {
@@ -61,8 +71,30 @@ class Race(
         scope.cancel()
     }
 
+    private fun analysisCommand(command: Command) {
+        if ("add" == command.command) {
+            addCar(Car(command.name))
+        } else if ("boost" == command.command) {
+            cars.filter { it.name == command.name }.forEach {
+                it.boost()
+            }
+        } else if ("slow" == command.command) {
+            cars.filter { it.name == command.name }.forEach {
+                it.slow()
+            }
+        } else if ("stop" == command.command) {
+            cars.filter { it.name == command.name }.forEach {
+                it.stop()
+            }
+        } else if ("resume" == command.command) {
+            cars.filter { it.name == command.name }.forEach {
+                it.resume()
+            }
+        }
+    }
+
     private fun addCar(car: Car) {
-        cars.add(car)
+        _cars.add(car)
         jobs += makeCarJob(car)
         println("${car.name} 참가 완료!\n")
     }
@@ -75,9 +107,9 @@ class Race(
         }
 
     private suspend fun move(car: Car) {
-        val duration = (0..500).random().milliseconds
+        val duration = (0..(5 * car.acceleration.toInt())).random().milliseconds
         delay(duration)
-        if (isPaused.get()) return
+        if (car.pause || isPaused.get()) return
         car.moveForward()
         if (car.isReachToGoal(goal)) {
             finishRace()
@@ -85,7 +117,7 @@ class Race(
     }
 
     private suspend fun printWinner() {
-        val winners = cars.filter { it.isReachToGoal(goal) }.map { it.name }
+        val winners = _cars.filter { it.isReachToGoal(goal) }.map { it.name }
         withContext(Dispatchers.IO) {
             println("\n${winners.joinToString(separator = ",", postfix = "가 최종 우승했습니다.")}")
         }

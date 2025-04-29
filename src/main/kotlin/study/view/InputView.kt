@@ -15,7 +15,7 @@ object InputView {
             .filter { it.isNotEmpty() }
     }
 
-    fun readyAddCar() {
+    fun readyCommand() {
         readlnOrNull() ?: ""
         println("입력해")
     }
