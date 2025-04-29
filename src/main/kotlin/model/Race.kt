@@ -25,9 +25,11 @@ class Race(
     suspend fun start() {
         val startJob = scope.launch { launchStart() } // 경기 시작
         val inputJob = scope.launch { launchInput() }
+        val monitorJob = scope.launch { monitorRace() }
 
         startJob.join()
         inputJob.join()
+        monitorJob.join()
     }
 
     suspend fun launchStart() {
@@ -51,6 +53,15 @@ class Race(
         }
     }
 
+    private suspend fun monitorRace() {
+        while (coroutineContext.isActive) {
+            for (car in channel) {
+                println("${car.name} 참가 완료!")
+                scope.launch { move(car) }
+            }
+        }
+    }
+
     fun pauseRace() {
         isPaused.set(true)
     }
@@ -59,40 +70,40 @@ class Race(
         isPaused.set(false)
     }
 
-    suspend fun enterInput() {
+    private suspend fun enterInput() {
         val input = readln()
+
         if (input.isEmpty()) {
             return
         }
 
-        val inputList = readln().split(' ')
-        if (checkInput(inputList)) {
-            println("다시 입력해주세요.")
-            enterInput()
-            return
-        }
+        if (input.isNotEmpty()) {
+            val inputList = input.split(' ')
+            if (checkInput(inputList)) {
+                println("다시 입력해주세요.")
+                enterInput()
+                return
+            }
 
-        val command = inputList[0]
-        val car = inputList[1]
+            val command = inputList[0]
+            val carName = inputList[1]
 
-        if (command == "add") {
-//            channel.send(Car(car))
+            if (command == "add") {
+                channel.send(Car(carName))
+            }
         }
     }
 
-    fun checkInput(inputList: List<String>): Boolean {
+    private fun checkInput(inputList: List<String>): Boolean {
         if (inputList.size < 2) {
             return true
         }
-
         if (inputList[0] != "add") {
             return true
         }
-
         if (inputList[1].length > 5) {
             return true
         }
-
         return false
     }
 
@@ -100,16 +111,16 @@ class Race(
         while (coroutineContext.isActive && car.position < goal) {
             if (!isPaused.get()) {
                 car.move()
-
-                if (car.position == goal) {
-                    checkWinner(car)
-                }
+                checkWinner(car)
             }
         }
     }
 
     fun checkWinner(car: Car) {
-        println("${car.name}가 최종 우승했습니다.")
-        scope.cancel()
+        if (car.position == goal) {
+            println("${car.name}가 최종 우승했습니다.")
+            scope.cancel()
+            channel.close()
+        }
     }
 }
