@@ -28,11 +28,11 @@ class RaceController(
         coroutineScope {
             initCarList()
             val goal = initGoal()
+            raceView.showRoundResult()
             runOperation()
             for (car in carChannel) {
                 runRound(car, goal)
             }
-            raceView.showRoundResult()
         }
 
     suspend fun initCarList() {
@@ -90,7 +90,6 @@ class RaceController(
                     while (isPause.get()) {
                         try {
                             parseOperation(readln())
-                            isPause.set(false)
                         } catch (e: Exception) {
                             handleError(e)
                         }
@@ -101,7 +100,10 @@ class RaceController(
     }
 
     suspend fun parseOperation(input: String) {
-        if (input.isEmpty()) return
+        if (input.isEmpty()) {
+            isPause.set(false)
+            return
+        }
         val operation = input.split(" ")
         if (operation.size != 2) throw IllegalArgumentException("올바른 명령이 아닙니다.")
         when (operation[0]) {
