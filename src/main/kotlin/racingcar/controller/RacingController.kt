@@ -69,45 +69,56 @@ class RacingController(
     private suspend fun runCommand() {
         for (c in channel) {
             if (c.isEmpty()) {
-                isPaused.set(!isPaused.get())
-                if (isPaused.get()) {
-                    println("(사용자 엔터 입력)")
-                }
+                pauseRacing()
             } else {
                 try {
                     val input = c.split(" ")
                     if (input.size != 2) {
                         throw IllegalArgumentException("invalid input: $c")
                     }
-                    val command = input[0]
-                    val name = input[1]
-                    when (command) {
-                        "add" -> {
-                            if (_cars.map { it.name }.toList().contains(name)) {
-                                throw IllegalArgumentException("duplicate name: $name")
-                            }
-                            addCar(name)
-                        }
-                        "boost", "slow", "stop", "start" -> {
-                            var car: Car
-                            _cars
-                                .find { it.name == name }
-                                .apply {
-                                    if (this == null) {
-                                        throw IllegalArgumentException("no car named $name")
-                                    }
-                                    car = this
-                                }
-                            controlCar(car, command)
-                        }
-                        else -> throw IllegalArgumentException("invalid command: $command")
-                    }
+                    controlCar(input[0], input[1])
                 } catch (e: IllegalArgumentException) {
                     println("[ERROR] ${e.message}")
                 } catch (e: IllegalStateException) {
                     println("[ERROR] ${e.message}")
                 }
             }
+        }
+    }
+
+    private fun pauseRacing() {
+        isPaused.set(!isPaused.get())
+        if (isPaused.get()) {
+            println("(사용자 엔터 입력)")
+        }
+    }
+
+    private fun controlCar(
+        command: String,
+        name: String,
+    ) {
+        when (command) {
+            "add" -> {
+                if (_cars.map { it.name }.toList().contains(name)) {
+                    throw IllegalArgumentException("duplicate name: $name")
+                }
+                addCar(name)
+            }
+
+            "boost", "slow", "stop", "start" -> {
+                var car: Car
+                _cars
+                    .find { it.name == name }
+                    .apply {
+                        if (this == null) {
+                            throw IllegalArgumentException("no car named $name")
+                        }
+                        car = this
+                    }
+                speedControlCar(car, command)
+            }
+
+            else -> throw IllegalArgumentException("invalid command: $command")
         }
     }
 
@@ -118,7 +129,7 @@ class RacingController(
         println("$name 참가 완료!")
     }
 
-    private fun controlCar(
+    private fun speedControlCar(
         car: Car,
         command: String,
     ) {
