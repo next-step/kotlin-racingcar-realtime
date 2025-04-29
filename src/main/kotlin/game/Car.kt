@@ -8,7 +8,7 @@ class Car(
     var position: Int = 0,
 ) {
     suspend fun move() {
-        delay((0..500).random().milliseconds)
+        delay((0..1000).random().milliseconds)
         position++
     }
 
