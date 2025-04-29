@@ -4,7 +4,7 @@ class Car(
     val name: String,
     var position: Int = 0,
     var acceleration: Float = 100f,
-    var pause: Boolean = false,
+    var isPause: Boolean = false,
 ) {
     fun moveForward() {
         position++
@@ -21,13 +21,13 @@ class Car(
         println("$name 속도 2배 감소!\n")
     }
 
-    fun stop() {
-        this.pause = true
+    fun pause() {
+        this.isPause = true
         println("$name 일시 정지!\n")
     }
 
     fun resume() {
-        this.pause = false
+        this.isPause = false
         println("$name 재개!\n")
     }
 

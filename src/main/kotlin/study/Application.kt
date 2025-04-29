@@ -21,9 +21,19 @@ fun main() {
         val channel = Channel<Command>()
 
         val race = Race(cars, goal, channel)
+        val commandScope = listenCommand(race, channel)
 
-        val commandScope = CoroutineScope(Dispatchers.IO)
-        commandScope.launch(Dispatchers.IO) {
+        race.startRace()
+        commandScope.cancel()
+    }
+}
+
+private fun listenCommand(
+    race: Race,
+    channel: Channel<Command>,
+): CoroutineScope =
+    CoroutineScope(Dispatchers.IO).apply {
+        this.launch {
             while (isActive) {
                 InputView.readyCommand()
                 race.pauseRace()
@@ -32,8 +42,4 @@ fun main() {
                 race.resumeRace()
             }
         }
-
-        race.startRace()
-        commandScope.cancel()
     }
-}

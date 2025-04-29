@@ -39,21 +39,17 @@ class Race(
         monitorCommand()
 
         jobs.joinAll()
-        printWinner()
+        evaluateWinner()
     }
 
     private fun launchRace() {
-        jobs =
-            _cars.map {
-                makeCarJob(it)
-            }
+        jobs = _cars.map(::makeMovingCarJob)
     }
 
     private fun monitorCommand() {
         scope.launch(Dispatchers.IO) {
-            for (command in channel) {
+            for (command in channel)
                 analysisCommand(command)
-            }
         }
     }
 
@@ -65,8 +61,10 @@ class Race(
         isPaused.set(false)
     }
 
-    private fun finishRace() {
-        scope.cancel()
+    private fun endRaceIfReachedGoal(car: Car) {
+        if (car.isReachToGoal(goal)) {
+            scope.cancel()
+        }
     }
 
     private fun analysisCommand(command: Command) {
@@ -75,40 +73,38 @@ class Race(
             return
         }
 
-        cars.firstOrNull { it.name == command.name }?.apply {
+        cars.firstOrNull { it.name == command.name }?.let {
             when (command.command) {
-                "boost" -> this.boost()
-                "slow" -> this.slow()
-                "stop" -> this.stop()
-                "resume" -> this.resume()
+                "boost" -> it.boost()
+                "slow" -> it.slow()
+                "stop" -> it.pause()
+                "resume" -> it.resume()
             }
         }
     }
 
     private fun addCar(car: Car) {
         _cars.add(car)
-        jobs += makeCarJob(car)
+        jobs += makeMovingCarJob(car)
         println("${car.name} 참가 완료!\n")
     }
 
-    private fun makeCarJob(car: Car): Job =
+    private fun makeMovingCarJob(car: Car): Job =
         scope.launch {
-            while (!car.isReachToGoal(goal) && coroutineContext.isActive) {
-                move(car)
+            while (kotlin.coroutines.coroutineContext.isActive && !car.isReachToGoal(goal)) {
+                moveCar(car)
             }
         }
 
-    private suspend fun move(car: Car) {
+    private suspend fun moveCar(car: Car) {
         val duration = (0..(5 * car.acceleration.toInt())).random().milliseconds
         delay(duration)
-        if (car.pause || isPaused.get()) return
+        if (car.isPause || isPaused.get()) return
         car.moveForward()
-        if (car.isReachToGoal(goal)) {
-            finishRace()
-        }
+        endRaceIfReachedGoal(car)
     }
 
-    private fun printWinner() {
+    private fun evaluateWinner() {
         val winners = _cars.filter { it.isReachToGoal(goal) }.map { it.name }
         println("\n${winners.joinToString(separator = ",", postfix = "가 최종 우승했습니다.")}")
     }
