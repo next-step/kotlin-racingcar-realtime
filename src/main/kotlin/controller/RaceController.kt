@@ -10,7 +10,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import model.RaceModel
 import view.RaceView
 import java.util.concurrent.atomic.AtomicBoolean
@@ -30,7 +29,7 @@ class RaceController(
         coroutineScope {
             initCarList()
             val goal = initGoal()
-            launch { runOperation() }
+            runOperation()
             for (car in carChannel) {
                 runRound(car, goal)
             }
@@ -82,23 +81,19 @@ class RaceController(
         }
     }
 
-    suspend fun runOperation() =
-        withContext(Dispatchers.IO) {
-            while (scope.isActive) {
-                launch {
-                    pauseChannel.send(readln())
-                }
-                for (interrupt in pauseChannel) {
-                    if (interrupt.isEmpty()) {
-                        scope.ensureActive()
-                        isPause.set(true)
-                        while (isPause.get()) {
-                            try {
-                                raceModel.initOperation(readln(), carChannel)
-                                isPause.set(false)
-                            } catch (e: Exception) {
-                                handleError(e)
-                            }
+    fun runOperation() =
+        scope.launch {
+            while (isActive) {
+                val interrupt = readln()
+                if (interrupt.isEmpty()) {
+                    ensureActive()
+                    isPause.set(true)
+                    while (isPause.get()) {
+                        try {
+                            raceModel.initOperation(readln(), carChannel)
+                            isPause.set(false)
+                        } catch (e: Exception) {
+                            handleError(e)
                         }
                     }
                 }
