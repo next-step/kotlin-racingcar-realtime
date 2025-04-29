@@ -31,7 +31,7 @@ class Race(
     private lateinit var jobs: List<Job>
     private val pauseState = AtomicBoolean(false)
 
-    private val channel = Channel<Car>(Channel.UNLIMITED)
+    private val channel = Channel<Car>()
 
     suspend fun start() {
         jobs =
@@ -39,31 +39,39 @@ class Race(
                 makeCarJob(it)
             }
 
-        scope.launch(Dispatchers.IO) {
+        scope.launch((Dispatchers.IO)) {
             while (isActive) {
-                InputView.readyAddCar()
-                pauseState.set(true)
-                val addCar = Car(InputView.readAddCar())
-                channel.send(addCar)
-                pauseState.set(false)
+                readyAddCar()
+                producingAddCar()
             }
         }
 
-        scope.launch {
+        scope.launch(Dispatchers.IO) {
             for (car in channel) {
-                makeAddCarJob(car)
-                println("${car.name} 참가 완료!\n")
+                consumingAddCar(car)
             }
         }
 
         jobs.joinAll()
         printWinner()
+        channel.close()
     }
 
-    private suspend fun makeAddCarJob(car: Car) {
+    private fun consumingAddCar(car: Car) {
         cars.add(car)
         jobs += makeCarJob(car)
-        channel.send(car)
+        println("${car.name} 참가 완료!\n")
+    }
+
+    private fun readyAddCar() {
+        InputView.readyAddCar()
+        pauseState.set(true) // 레이
+    }
+
+    private suspend fun producingAddCar() {
+        val addCar = Car(InputView.readAddCar())
+        channel.send(addCar)
+        pauseState.set(false)
     }
 
     private fun makeCarJob(car: Car): Job =
