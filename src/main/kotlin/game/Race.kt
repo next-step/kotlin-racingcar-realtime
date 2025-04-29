@@ -16,7 +16,7 @@ class Race(
     private val scope = CoroutineScope(dispatcher + SupervisorJob())
 
     private val isPaused = AtomicBoolean(false)
-    private val channel: Channel<Car> = Channel(Channel.UNLIMITED)
+    private val channel: Channel<Pair<Operation, Car>> = Channel(Channel.UNLIMITED)
 
     suspend fun start() {
         launchRace()
@@ -54,9 +54,8 @@ class Race(
                 if (input.isNullOrBlank()) {
                     togglePause()
                 } else {
-                    if (input.startsWith("add")) {
-                        channel.send(Car(input.split(" ")[1]))
-                    }
+                    val i = input.split(" ")
+                    controlRace(i[0], i[1])
                     resumeRace()
                 }
             }
@@ -66,10 +65,20 @@ class Race(
     private suspend fun monitorRace() {
         while (scope.isActive) {
             if (!channel.isEmpty) {
-                val car = channel.receive()
-                println("${car.name} 참가 완료!")
-                println()
-                move(car)
+                val event = channel.receive()
+                val car = event.second
+                when (event.first) {
+                    Operation.ADD -> {
+                        println("${car.name} 참가 완료!")
+                        println()
+                        move(car)
+                    }
+                    Operation.BOOST -> {
+                        car.boost()
+                        println("${car.name} 속도 2배 증가! \n")
+                    }
+                    else -> {}
+                }
             }
 //            try {
 //                val car = channel.receive()
@@ -92,6 +101,16 @@ class Race(
 
     fun resumeRace() {
         isPaused.set(false)
+    }
+
+    suspend fun controlRace(operation: String, carName: String) {
+        when (operation) {
+            Operation.ADD.operation -> channel.send(Pair(Operation.ADD, Car(carName)))
+            Operation.BOOST.operation -> channel.send(Pair(Operation.BOOST, Car(carName)))
+            Operation.SLOW.operation -> channel.send(Pair(Operation.SLOW, Car(carName)))
+            Operation.STOP.operation -> channel.send(Pair(Operation.STOP, Car(carName)))
+            else -> { println("Unknown operation") }
+        }
     }
 
     fun getWinners(): List<String> {
