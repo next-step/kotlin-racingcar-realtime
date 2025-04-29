@@ -3,9 +3,9 @@ package racingcar.model
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
-class RacingCar(
+class Car(
     val name: String,
-    private var position: Int = 0
+    var position: Int = 0
 ) {
     init {
         require(name.isNotBlank() && name.length <= 5) {
@@ -16,17 +16,16 @@ class RacingCar(
     suspend fun moveForward() {
         delay(RandomMovingRule.getDelayTime().milliseconds)
         position ++
+        println(this)
     }
-
-    fun getPosition(): Int = position
 
     override fun toString(): String {
         return "$name : ${"-".repeat(position)}"
     }
 
     companion object {
-        fun of(name: String, position: Int): RacingCar {
-            return RacingCar(name, position)
+        fun of(name: String, position: Int): Car {
+            return Car(name, position)
         }
     }
 }
