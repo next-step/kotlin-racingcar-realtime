@@ -9,6 +9,7 @@
 #### Race
 - [x] feat: 전체 자동차와 목표 거리를 관리한다.(Race)
 - [x] feat: 한 대가 목표거리가 될 때 까지 자동차 여러 대를 동시에 move한다.
+- [x] feat: 명령어를 추가해 Car를 조작한다.
 
 ### Controller
 - [x] feat: 경기를 시작한다. (RaceController)
