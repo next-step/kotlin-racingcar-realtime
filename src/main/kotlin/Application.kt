@@ -10,6 +10,8 @@ val boostChannel = Channel<Car>()
 val slowChannel = Channel<Car>()
 val stopChannel = Channel<Car>()
 
+val ioScope = CoroutineScope(Dispatchers.IO)
+
 var restart = false
 
 fun main() {
@@ -39,7 +41,7 @@ fun main() {
     }
 
     runBlocking {
-        launch {
+        ioScope.launch {
             for (car in addChannel) {
                 synchronized(Car) {
                     Car.addCar(car)
@@ -47,7 +49,7 @@ fun main() {
                 }
             }
         }
-        launch {
+        ioScope.launch {
             for (car in boostChannel) {
                 synchronized(Car) {
                     Car.boostCar(car)
@@ -55,7 +57,7 @@ fun main() {
                 }
             }
         }
-        launch {
+        ioScope.launch {
             for (car in slowChannel) {
                 synchronized(Car) {
                     Car.slowCar(car)
@@ -63,7 +65,7 @@ fun main() {
                 }
             }
         }
-        launch {
+        ioScope.launch {
             for (car in stopChannel) {
                 synchronized(Car) {
                     Car.stopCar(car)
@@ -98,8 +100,8 @@ suspend fun runRace(loopCount: Int) {
 fun realInput() {
     while (!Race.raceDone.get()) {
         val input = readLine()
-        println("(사용자 엔터 입력)")
         if (input != null && input == "" && !Race.raceDone.get()) {
+            println("(사용자 엔터 입력)")
             Race.cancelAllJob()
             inputAddCar()
         }
@@ -130,7 +132,7 @@ fun inputAddCar() {
 
 fun parseInput(input: String) {
     val stringList = input.split(" ")
-    if (stringList.size < 2 && input != "") {
+    if (stringList.size != 2 && input != "") {
         throw IllegalArgumentException("[ERROR] 입력이 잘못되었습니다. add {차량이름}, boost {차량이름}, slow {차량이름}, stop {차량이름}")
     }
     runBlocking {
