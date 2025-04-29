@@ -1,7 +1,6 @@
 package com.kmc
 
 import kotlinx.coroutines.delay
-import kotlin.random.Random
 
 class Car() {
     companion object {
@@ -18,40 +17,37 @@ class Car() {
             }
         }
 
-        fun addCar(name: String) {
+        fun makeCar(name: String): Car {
             val findCar = mCarList.find { it.mName == name }
             if (findCar != null) {
-                println("이미 추가된 자동차 입니다.")
-                return
+                throw IllegalArgumentException("[ERROR] 이미 추가된 자동차 입니다.")
             }
-            mCarList.add(Car().apply { mName = name })
+            return Car().apply { mName = name }
         }
 
-        fun boostCar(name: String) {
-            val findCar = mCarList.find { it.mName == name }
-            if (findCar == null) {
-                println("찾는 자동차가 없습니다.")
-                return
+        fun findCar(name: String): Car {
+            val ret = mCarList.find { it.mName == name }
+            if (ret == null) {
+                throw IllegalArgumentException("[ERROR] 찾는 자동차가 없습니다.")
             }
-            findCar.mSpeed = findCar.mSpeed * 2
+            return ret
         }
 
-        fun slowCar(name: String) {
-            val findCar = mCarList.find { it.mName == name }
-            if (findCar == null) {
-                println("찾는 자동차가 없습니다.")
-                return
-            }
-            findCar.mSpeed = findCar.mSpeed / 2
+        fun addCar(car: Car) {
+            mCarList.add(car)
+            println("${car.mName} 참가완료!")
         }
 
-        fun stopCar(name: String) {
-            val findCar = mCarList.find { it.mName == name }
-            if (findCar == null) {
-                println("찾는 자동차가 없습니다.")
-                return
-            }
-            findCar.mSpeed = 0
+        fun boostCar(car: Car) {
+            car.mSpeed = car.mSpeed * 2
+        }
+
+        fun slowCar(car: Car) {
+            car.mSpeed = car.mSpeed / 2
+        }
+
+        fun stopCar(car: Car) {
+            car.mSpeed = 0
         }
 
         fun createCar(carList: List<String>) {
@@ -71,7 +67,7 @@ class Car() {
         }
 
         suspend fun canMoveRandWithMove(car: Car) {
-            val number = Random.nextInt(500)
+            val number = (0..500).random()
             delay(number.toLong())
             car.moveCar()
             car.printPosition()

@@ -5,10 +5,10 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
-val addChannel = Channel<String>()
-val boostChannel = Channel<String>()
-val slowChannel = Channel<String>()
-val stopChannel = Channel<String>()
+val addChannel = Channel<Car>()
+val boostChannel = Channel<Car>()
+val slowChannel = Channel<Car>()
+val stopChannel = Channel<Car>()
 
 var restart = false
 
@@ -40,33 +40,33 @@ fun main() {
 
     runBlocking {
         launch {
-            for (name in addChannel) {
+            for (car in addChannel) {
                 synchronized(Car) {
-                    Car.addCar(name)
+                    Car.addCar(car)
                     restart = true
                 }
             }
         }
         launch {
-            for (name in boostChannel) {
+            for (car in boostChannel) {
                 synchronized(Car) {
-                    Car.boostCar(name)
+                    Car.boostCar(car)
                     restart = true
                 }
             }
         }
         launch {
-            for (name in slowChannel) {
+            for (car in slowChannel) {
                 synchronized(Car) {
-                    Car.slowCar(name)
+                    Car.slowCar(car)
                     restart = true
                 }
             }
         }
         launch {
-            for (name in stopChannel) {
+            for (car in stopChannel) {
                 synchronized(Car) {
-                    Car.stopCar(name)
+                    Car.stopCar(car)
                     restart = true
                 }
             }
@@ -135,10 +135,10 @@ fun parseInput(input: String) {
     }
     runBlocking {
         when (stringList[0]) {
-            "add" -> addChannel.send(stringList[1])
-            "boost" -> boostChannel.send(stringList[1])
-            "slow" -> slowChannel.send(stringList[1])
-            "stop" -> stopChannel.send(stringList[1])
+            "add" -> addChannel.send(Car.makeCar(stringList[1]))
+            "boost" -> boostChannel.send(Car.findCar(stringList[1]))
+            "slow" -> slowChannel.send(Car.findCar(stringList[1]))
+            "stop" -> stopChannel.send(Car.findCar(stringList[1]))
             "" -> restart = true
             else -> throw IllegalArgumentException("[ERROR] 입력이 잘못되었습니다. add {차량이름}, boost {차량이름}, slow {차량이름}, stop {차량이름}")
         }
