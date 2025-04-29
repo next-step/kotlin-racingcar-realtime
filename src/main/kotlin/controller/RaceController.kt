@@ -17,18 +17,6 @@ class RaceController {
             val carLists = nameLists.map(::Car)
             val race = Race(carLists, goalDistance)
 
-//            launch(Dispatchers.IO) {
-//                while (true) {
-//                    val input = readLine()
-//
-//                    // 엔터만 입력되었을 때
-//                    if (input.isNullOrEmpty()) {
-//                        println("(사용자 엔터 입력)")
-//                    } else {
-//                        println("입력값: $input")
-//                    }
-//                }
-//            }
             race.start()
         }
 }
