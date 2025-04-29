@@ -3,7 +3,6 @@ package model
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
@@ -15,7 +14,6 @@ import kotlin.coroutines.coroutineContext
 class Race(
     cars: List<Car>,
     val goalDistance: Int,
-//    private val inputChannel: Channel<String> = Channel(Channel.UNLIMITED),
     private val channel: Channel<Car> = Channel(Channel.UNLIMITED),
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
@@ -25,49 +23,6 @@ class Race(
 
     private val scope: CoroutineScope = CoroutineScope(dispatcher + SupervisorJob())
     val isPaused: AtomicBoolean = AtomicBoolean(false)
-
-    var jobs: MutableList<Job> = mutableListOf()
-
-//    suspend fun start() {
-// //        val nowJob =
-//        _cars.forEach {
-//            scope.launch { move(it) }
-//        }
-//
-// //        jobs.addAll(nowJob)
-//
-//        scope.launch {
-//            while (true) {
-//                if (isPaused.get()) {
-//                    break
-//                }
-//
-//                readLine() ?: break
-//                isPaused.set(true)
-//                val input = readLine() ?: break
-//
-//                if (input.isEmpty()) {
-//                    isPaused.set(false)
-//                } else if (input.startsWith("add ")) {
-//                    val carName = input.replace("add ", "")
-//                    channel.send(Car(carName))
-//                } else {
-//                    isPaused.set(false)
-//                }
-//            }
-//        }
-//
-//        scope.launch {
-//            for (newCar in channel) {
-//                println("새 참가자: ${newCar.carName}")
-//                val newJob = scope.launch { move(newCar) }
-//                jobs.add(newJob)
-//
-//                isPaused.set(false)
-//            }
-//        }
-//        jobs.joinAll()
-//    }
 
     suspend fun start() {
         val raceJob = scope.launch { launchRace() }
@@ -87,8 +42,7 @@ class Race(
 
     private suspend fun monitorRace() {
         while (coroutineContext.isActive) { // 제어권을 넘겨주기 위한 용도
-            while (!channel.isEmpty) {
-                val car = channel.receive()
+            for (car in channel) {
                 println("${car.carName} 참가 완료!")
                 _cars.add(car)
                 scope.launch {
@@ -168,22 +122,7 @@ class Race(
         if (position == goalDistance) {
             println("${carName}가 최종 우승했습니다.")
             scope.cancel()
-//            channel.close()
+            channel.close()
         }
     }
-
-//    private suspend fun moveMine(car: Car) {
-//        while (coroutineContext.isActive && car.position < goalDistance) {
-//            while (isPaused.get()) {
-//                yield()
-//            }
-//            yield()
-//            car.move()
-//            if (car.position == goalDistance) {
-//                println("${car.carName}가 최종 우승했습니다.")
-//                channel.close()
-//                scope.cancel()
-//            }
-//        }
-//    }
 }

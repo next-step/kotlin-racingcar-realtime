@@ -18,19 +18,4 @@ class InputView {
 
         return input
     }
-
-    fun getUserInputEnter() {
-        // 무한 루프에서 사용자의 입력을 기다림
-        while (true) {
-            val input = readLine()
-
-            // 엔터만 입력되었을 때
-            if (input.isNullOrEmpty()) {
-                println("엔터를 눌렀습니다! 특정 행동을 수행합니다.")
-                break // 원하는 행동을 수행한 후 종료
-            } else {
-                println("입력값: $input")
-            }
-        }
-    }
 }
