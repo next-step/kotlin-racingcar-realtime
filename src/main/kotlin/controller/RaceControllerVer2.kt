@@ -14,12 +14,12 @@ import kotlin.coroutines.coroutineContext
 class RacingControllerVer2(
     val raceView: RaceView,
     val dispatcher: CoroutineDispatcher = Dispatchers.Default,
-    val channel: Channel<RacingCar> = Channel(Channel.UNLIMITED)
+    val channel: Channel<RacingCar> = Channel(Channel.UNLIMITED),
 ) {
     var racingCars = mutableListOf<RacingCar>()
     var distance = Distance()
-    var racingJobs = mutableListOf<Job>()
     var isGamePaused = AtomicBoolean(false)
+
     private var scope = CoroutineScope(dispatcher + SupervisorJob())
 
     fun printCarListInputMessage() {
@@ -72,36 +72,23 @@ class RacingControllerVer2(
     @OptIn(ExperimentalCoroutinesApi::class)
     suspend fun startGameWithAddCar() {
         scope.launch {
-            launch {
-                startGameVer5()
-            }
+            observeUserInput()
+            observeNewRacingCar()
 
-            launch {
-                addRacingCarVer2()
-            }
-
-            /** 차량 추가 channel */
-            while (isActive) {
-                while (!channel.isEmpty) {
-                    val newRacingCar = channel.receive()
-                    println("${newRacingCar.name} 참가 완료 !!")
-
-                    scope.launch {
-                        move(newRacingCar)
-                    }
-                }
-            }
+            startGame()
+            // startGame에서 우승자 감지 전까지 joinAll >> 우승자를 찾아야 끝이므로 다른 코루틴들 미리 돌려놓고 joinAll을 하는 현재 로직을 마지막에 배치
         }.join()
+        // main 스레드에서 돌아가는 runBlocking 종료 방지 위해서 join ?
     }
 
-    suspend fun startGameVer5() {
-        racingJobs = racingCars.map {
-            scope.launch {
+    suspend fun startGame() {
+        racingCars.map {
+            scope.launch(dispatcher) {
                 move(it)
             }
-        }.toMutableList()
-
-        racingJobs.joinAll()
+        }.joinAll()
+        // 별도 코루틴으로 동작 수행 시, 동작 완료를 기다려야 한다면 여기서도 join 처리를 해줘야 동작 완료전까지 프로그램 종료 x
+        // 현재 콘솔 환경은 모바일 어플리케이션처럼 계속 프로그램이 살아서 돌아가는 것이 아니기 때문이다 ?!
     }
 
     private suspend fun move(racingCar: RacingCar) {
@@ -114,7 +101,7 @@ class RacingControllerVer2(
         }
     }
 
-    private suspend fun checkWinner(racingCar: RacingCar) {
+    private fun checkWinner(racingCar: RacingCar) {
         if (racingCar.position == distance.totalDistance) {
             printWinner(racingCar.name)
 
@@ -122,18 +109,40 @@ class RacingControllerVer2(
         }
     }
 
-    fun addRacingCarVer2() {
+    private fun observeUserInput() {
         scope.launch(Dispatchers.IO) {
             while (isActive) {
                 val input = readlnOrNull()
                 if (input != null) {
                     isGamePaused.set(true)
 
-                    println("[channel ver] new 차량 이름 입력!")
+                    println("새로운 차량 이름 입력해주세요!")
                     val command = readlnOrNull()
                     channel.send(RacingCar(command ?: "")) // Todo 빈 차량 이름 예외 처리 하기!
 
                     isGamePaused.set(false)
+                }
+            }
+        }
+    }
+
+    /** channel을 통해서 새로운 차량 정보 받기 */
+    private fun observeNewRacingCar() {
+        scope.launch {
+            while (isActive) {
+                while (!channel.isEmpty) {
+                    val newRacingCar = channel.receive()
+
+                    if (newRacingCar.name.isEmpty()) {
+                        println("차량 이름에 빈 문자열이 입력되었습니다..")
+                    } else {
+                        println("${newRacingCar.name} 참가 완료 !!")
+                        //println("this : ${this.hashCode()}, scope : ${scope.hashCode()}")
+
+                        scope.launch {
+                            move(newRacingCar)
+                        }
+                    }
                 }
             }
         }

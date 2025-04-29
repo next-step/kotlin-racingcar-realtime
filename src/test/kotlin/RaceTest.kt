@@ -1,4 +1,5 @@
 import controller.RacingController
+import controller.RacingControllerVer2
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -11,7 +12,7 @@ class RaceTest {
 
     @Test
     fun start() = runTest {
-        val raceController = RacingController(
+        val raceController = RacingControllerVer2(
             raceView = RaceView(),
             dispatcher = StandardTestDispatcher(testScheduler)
         )
@@ -23,7 +24,7 @@ class RaceTest {
         raceController.distance = Distance(5)
 
         // when
-        raceController.startGameVer3()
+        raceController.startGame()
 
         // then
         val winner = raceController.racingCars.firstOrNull { it.position == raceController.distance.totalDistance }?.name

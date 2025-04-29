@@ -23,8 +23,6 @@ fun main() {
 
         startGame(raceController)
     }
-
-    //joinTest()
 }
 
 private fun initRacingCars(raceController: RacingControllerVer2) {
@@ -40,61 +38,9 @@ private fun initRound(raceController: RacingControllerVer2) {
 private suspend fun startGame(raceController: RacingControllerVer2) {
     coroutineScope {
         raceController.printStartGameMeesage()
-        //raceController.startGame()
-        //raceController.startGameVer2()
-
-//        launch {
-//            //raceController.startGameVer3()
-//            raceController.startGameVer4()
-//        }
-//
-//        launch {
-//            raceController.addRacingCar()
-//        }
-
         raceController.startGameWithAddCar()
-    }
-}
 
-fun joinTest() {
-    runBlocking {
-        var jobs = mutableListOf<Job>()
-        var count = 0
-        val mutex = Mutex()
-
-        val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-        scope.launch {
-            jobs.add(
-                launch(Dispatchers.IO) {
-                    while (isActive && count < 5) {
-                        println("count! : $count")
-                        delay(1000L)
-                        count++
-
-                        if (count == 3) {
-
-                            jobs.add(
-                                launch(Dispatchers.IO) {
-                                    println("add job start !")
-                                    delay(5000L)
-                                    println("add job finished")
-                                }
-                            )
-
-                        }
-                    }
-                }
-            )
-
-            //jobs.joinAll()
-        }.join()
-
-        //jobs.joinAll()
-//        jobs.forEach {
-//            mutex.withLock {
-//                it.join()
-//            }
-//        }
-        // SupervisorJob 없으면 error 이유 ?
+        //delay(100000L)
+        //모바일 환경 처럼 계속 프로세스가 살아있지 않으므로 현재 프로젝트에서는 코루틴 동작에 있어 join 처리 필요
     }
 }
