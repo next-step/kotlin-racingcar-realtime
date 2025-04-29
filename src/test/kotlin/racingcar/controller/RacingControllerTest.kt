@@ -13,17 +13,17 @@ class RacingControllerTest {
     fun startRacingTest() =
         runTest {
             // given
-            val race = RacingController(RacingView(), StandardTestDispatcher(testScheduler))
-            race.goal = 10
-            race.cars =
+            val cars =
                 listOf(
                     Car("car1"),
                     Car("car2"),
                     Car("car3"),
                 )
+            val goal = 10
+            val race = RacingController(cars, goal, RacingView(), StandardTestDispatcher(testScheduler))
 
             // when
-            race.startRacing()
+            race.start()
 
             // then
             race.cars.firstOrNull { it.position == race.goal }.shouldNotBeNull()
@@ -33,17 +33,17 @@ class RacingControllerTest {
     fun startRacingTest2() =
         runTest {
             // given
-            val race = RacingController(RacingView(), StandardTestDispatcher(testScheduler))
-            race.goal = 10
-            race.cars =
+            val cars =
                 listOf(
                     Car("car1", 0),
                     Car("car2", 0),
                     Car("car3", 9),
                 )
+            val goal = 10
+            val race = RacingController(cars, goal, RacingView())
 
             // when
-            race.startRacing()
+            race.start()
 
             // then
             val winner = race.cars.firstOrNull { it.position == race.goal }
