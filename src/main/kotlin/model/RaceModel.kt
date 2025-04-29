@@ -50,17 +50,5 @@ class RaceModel {
         return car
     }
 
-    suspend fun initOperation(
-        input: String,
-        channel: Channel<Car>,
-    ) {
-        if (input.isEmpty()) throw IllegalArgumentException("입력된 명령이 없습니다.")
-        val (op, name) = input.split(" ")
-        when (op) {
-            "add" -> {
-                initCar(name, channel)
-            }
-            else -> throw IllegalArgumentException("")
-        }
-    }
+
 }

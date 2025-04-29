@@ -90,7 +90,7 @@ class RaceController(
                     isPause.set(true)
                     while (isPause.get()) {
                         try {
-                            raceModel.initOperation(readln(), carChannel)
+                            parseOperation(readln())
                             isPause.set(false)
                         } catch (e: Exception) {
                             handleError(e)
@@ -99,6 +99,21 @@ class RaceController(
                 }
             }
         }
+
+    suspend fun parseOperation(
+        input: String,
+    ) {
+        if (input.isEmpty()) throw IllegalArgumentException("입력된 명령이 없습니다.")
+        val operation = input.split(" ")
+        if (operation.size != 2) throw IllegalArgumentException("올바른 명령이 아닙니다.")
+        when (operation[0]) {
+            "add" -> {
+                raceModel.initCar(operation[1], carChannel)
+                raceView.addCarMsg(operation[1])
+            }
+            else -> throw IllegalArgumentException("알 수 없는 명령어입니다.")
+        }
+    }
 
     private fun handleError(e: Exception) {
         raceView.showErrorMsg(e.message.toString())

@@ -16,17 +16,15 @@ class RaceView {
     }
 
     fun showCarStatus(car: Car) {
-        println(
-            StringBuilder().apply {
-                append(car.name)
-                append(" : ")
-                append("-".repeat(car.distance))
-            },
-        )
+        println("${car.name} : ${"-".repeat(car.distance)}")
+    }
+
+    fun addCarMsg(name: String) {
+        println("$name 참가 완료!\n")
     }
 
     fun showWinner(winner: Car) {
-        println("${winner.name}가 최종 우승했습니다.")
+        println("\n${winner.name}가 최종 우승했습니다.")
     }
 
     fun showErrorMsg(msg: String) {
