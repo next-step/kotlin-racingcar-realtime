@@ -25,13 +25,8 @@ class RaceView {
         )
     }
 
-    fun showWinners(winners: List<String>) {
-        println(
-            StringBuilder().apply {
-                append(winners.joinToString(", "))
-                append("가 최종 우승했습니다.")
-            },
-        )
+    fun showWinner(winner: Car) {
+        println("${winner.name}가 최종 우승했습니다.")
     }
 
     fun showErrorMsg(msg: String) {

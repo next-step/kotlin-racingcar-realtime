@@ -1,17 +1,28 @@
 package model
 
 import entity.Car
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
 class RaceModel {
-    fun initCarList(input: String): List<Car> {
+    suspend fun initCarList(
+        input: String,
+        channel: Channel<Car>,
+    ) {
         if (input.isEmpty()) throw IllegalArgumentException("입력된 이름이 없습니다.")
-        return input.split(",").map {
-            if (it.isEmpty()) throw IllegalArgumentException("입력된 이름이 없습니다.")
-            if (it.length > 5) throw IllegalArgumentException("자동차 이름은 5자 이하만 가능합니다.")
-            Car(it, 0)
+        input.split(",").forEach {
+            initCar(it, channel)
         }
+    }
+
+    suspend fun initCar(
+        input: String,
+        channel: Channel<Car>,
+    ) {
+        if (input.isEmpty()) throw IllegalArgumentException("입력된 이름이 없습니다.")
+        if (input.length > 5) throw IllegalArgumentException("자동차 이름은 5자 이하만 가능합니다.")
+        channel.send(Car(input, 0))
     }
 
     fun initGoal(input: String): Int {
@@ -33,10 +44,17 @@ class RaceModel {
         return car
     }
 
-    fun getWinners(
-        carList: List<Car>,
-        goal: Int,
-    ): List<String> {
-        return carList.filter { it.distance == goal }.map { it.name }
+    suspend fun initOperation(
+        input: String,
+        channel: Channel<Car>,
+    ) {
+        if (input.isEmpty()) throw IllegalArgumentException("입력된 명령이 없습니다.")
+        val (op, name) = input.split(" ")
+        when (op) {
+            "add" -> {
+                initCar(name, channel)
+            }
+            else -> throw IllegalArgumentException("")
+        }
     }
 }

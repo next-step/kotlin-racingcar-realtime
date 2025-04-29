@@ -5,22 +5,46 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import model.RaceModel
 import view.RaceView
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.coroutines.CoroutineContext
+import kotlin.time.Duration.Companion.milliseconds
 
 class RaceController(
     val raceModel: RaceModel,
     val raceView: RaceView,
+    dispatcher: CoroutineContext = (Dispatchers.Default + SupervisorJob()),
 ) {
-    fun initCarList(): List<Car> {
+    val pauseChannel = Channel<String>()
+    val carChannel = Channel<Car>(Channel.UNLIMITED)
+    val scope = CoroutineScope(dispatcher)
+    val isPause = AtomicBoolean(false)
+
+    suspend fun runGame() =
+        coroutineScope {
+            initCarList()
+            val goal = initGoal()
+            launch { runOperation() }
+            for (car in carChannel) {
+                runRound(car, goal)
+            }
+            raceView.showRoundResult()
+        }
+
+    suspend fun initCarList() {
         while (true) {
             try {
                 raceView.showCarInitMsg()
-                return raceModel.initCarList(readln())
+                raceModel.initCarList(readln(), carChannel)
+                return
             } catch (e: IllegalArgumentException) {
                 handleError(e)
             }
@@ -38,33 +62,44 @@ class RaceController(
         }
     }
 
-    suspend fun runRound(
-        carList: List<Car>,
+    fun runRound(
+        car: Car,
         goal: Int,
-        scope: CoroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob()),
     ) {
-        raceView.showRoundResult()
-        carList.map {
-            scope.launch {
-                while (isActive) {
-                    ensureActive()
-                    raceModel.runRound(it)
-                    raceView.showCarStatus(it)
-                    if (it.isFinished(goal)) {
-                        scope.cancel()
+        scope.launch {
+            while (isActive) {
+                ensureActive()
+                while (isPause.get()) {
+                    delay(100.milliseconds)
+                    continue
+                }
+                raceModel.runRound(car)
+                raceView.showCarStatus(car)
+                if (car.isFinished(goal)) {
+                    raceView.showWinner(car)
+                    scope.cancel()
+                    pauseChannel.close()
+                    carChannel.close()
+                }
+            }
+        }
+    }
+
+    suspend fun runOperation() =
+        withContext(Dispatchers.IO) {
+            while (scope.isActive) {
+                readln()
+                isPause.set(true)
+                while (isPause.get()) {
+                    try {
+                        raceModel.initOperation(readln(), carChannel)
+                        isPause.set(false)
+                    } catch (e: Exception) {
+                        handleError(e)
                     }
                 }
             }
-        }.joinAll()
-    }
-
-    fun runAward(
-        carList: List<Car>,
-        goal: Int,
-    ) {
-        val winners = raceModel.getWinners(carList, goal)
-        raceView.showWinners(winners)
-    }
+        }
 
     private fun handleError(e: Exception) {
         raceView.showErrorMsg(e.message.toString())
