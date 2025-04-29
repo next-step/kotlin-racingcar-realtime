@@ -25,4 +25,9 @@ data class Car(
         println("boostSpeed" + carName)
         duration /= 2
     }
+
+    fun slowSpeed() {
+        println("slowSpeed" + carName)
+        duration *= 2
+    }
 }

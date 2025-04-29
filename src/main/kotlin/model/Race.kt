@@ -54,6 +54,15 @@ class Race(
         }
     }
 
+    private fun slow(car: Car) {
+        _cars.forEach {
+            if (it.equals(car.carName)) {
+                println(car.carName)
+                it.slowSpeed()
+            }
+        }
+    }
+
     private suspend fun monitorRace() {
         while (coroutineContext.isActive) { // 제어권을 넘겨주기 위한 용도
             while (!channel.isEmpty) {
@@ -70,6 +79,10 @@ class Race(
                     is CarEvent.Boost -> {
                         println("${carEvent.car} 속도가 상승됩니다!")
                         boost(carEvent.car)
+                    }
+                    is CarEvent.Slow -> {
+                        println("${carEvent.car} 속도가 하락합니다!")
+                        slow(carEvent.car)
                     }
                 }
 
@@ -109,6 +122,7 @@ class Race(
 
                 if (command.equals("add", ignoreCase = true)) channel.send(CarEvent.Add(Car(carName)))
                 else if (command.equals("boost", ignoreCase = true)) channel.send(CarEvent.Boost(Car(carName)))
+                else if (command.equals("slow", ignoreCase = true)) channel.send(CarEvent.Slow(Car(carName)))
 
             } else {
                 println("다시 입력해주세요.")
@@ -125,7 +139,7 @@ class Race(
         if (inputList[1].length > 5) {
             return false
         }
-        if (inputList[0] != "add" && inputList[0] != "boost") {
+        if (inputList[0] != "add" && inputList[0] != "boost" && inputList[0] != "slow") {
             return false
         }
         if (inputList[0] == "add") {
