@@ -11,21 +11,19 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import study.domain.Car
 import study.domain.Command
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.collections.filter
 import kotlin.collections.joinToString
 import kotlin.collections.map
-import kotlin.coroutines.coroutineContext
 import kotlin.ranges.random
 import kotlin.time.Duration.Companion.milliseconds
 
 class Race(
     cars: List<Car>,
     val goal: Int = 0,
-    private val channel: Channel<Command>,
+    private val channel: Channel<Command> = Channel(),
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
     private val _cars: MutableList<Car> = cars.toMutableList()
@@ -43,8 +41,6 @@ class Race(
         jobs.joinAll()
         printWinner()
     }
-
-    fun isGameInProgress(): Boolean = scope.isActive
 
     private fun launchRace() {
         jobs =
@@ -79,7 +75,7 @@ class Race(
             return
         }
 
-        cars.first { it.name == command.name }.apply {
+        cars.firstOrNull { it.name == command.name }?.apply {
             when (command.command) {
                 "boost" -> this.boost()
                 "slow" -> this.slow()
@@ -112,10 +108,8 @@ class Race(
         }
     }
 
-    private suspend fun printWinner() {
+    private fun printWinner() {
         val winners = _cars.filter { it.isReachToGoal(goal) }.map { it.name }
-        withContext(Dispatchers.IO) {
-            println("\n${winners.joinToString(separator = ",", postfix = "가 최종 우승했습니다.")}")
-        }
+        println("\n${winners.joinToString(separator = ",", postfix = "가 최종 우승했습니다.")}")
     }
 }

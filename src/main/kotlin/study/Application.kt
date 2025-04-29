@@ -1,6 +1,8 @@
 package study
 
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -20,20 +22,18 @@ fun main() {
 
         val race = Race(cars, goal, channel)
 
-        launch(Dispatchers.IO) {
-            while (race.isGameInProgress() && isActive) {
+        val commandScope = CoroutineScope(Dispatchers.IO)
+        commandScope.launch(Dispatchers.IO) {
+            while (isActive) {
                 InputView.readyCommand()
-                if (!race.isGameInProgress()) {
-                    println("끝났어")
-                } else {
-                    race.pauseRace()
-                    val (command, name) = InputView.readCommand()
-                    channel.send(Command(command, name))
-                    race.resumeRace()
-                }
+                race.pauseRace()
+                val (command, name) = InputView.readCommand()
+                channel.send(Command(command, name))
+                race.resumeRace()
             }
         }
 
         race.startRace()
+        commandScope.cancel()
     }
 }
