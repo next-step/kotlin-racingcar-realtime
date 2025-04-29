@@ -7,6 +7,7 @@ import kotlinx.coroutines.runBlocking
 import view.RaceView
 
 fun main() {
+    /*
     runBlocking {
         val raceController = RacingController(raceView = RaceView())
 
@@ -19,6 +20,7 @@ fun main() {
             waitAddCar(raceController)
         }.join()
     }
+    */
 }
 
 private fun initRacingCars(raceController: RacingController) {
