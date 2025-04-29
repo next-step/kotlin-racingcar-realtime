@@ -1,20 +1,34 @@
 package racingcar.controller
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import racing.view.ConsoleView
 import racingcar.model.Car
 import racingcar.model.Race
 
 
-class RaceController{
-    suspend fun run() {
+class RaceController {
+    suspend fun run() = runBlocking() {
         val carNames = validateCarNames()
         val goal = validateGoal()
         val cars = carNames.map { Car(it) }
+        val channel = Channel<String>(UNLIMITED)
 
-        val race = Race(cars, goal)
-        coroutineScope {
-            race.start()
+        val race = Race(cars, goal, channel)
+
+        race.start()
+        val job = launch(Dispatchers.IO) {
+            while(isActive) {
+                val input = readlnOrNull()
+                if (input != null) {
+                    race.isPaused.set(true)
+                }
+            }
         }
     }
 

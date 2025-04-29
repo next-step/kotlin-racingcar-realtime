@@ -1,26 +1,42 @@
 package racingcar.model
 
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.coroutineContext
 
 class Race(
     val cars: List<Car>,
     val goal: Int,
+    val channel: Channel<String> = Channel(UNLIMITED),
     val dispatcher: CoroutineDispatcher = Dispatchers.Default
 ) {
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-    private val isPaused: AtomicBoolean = AtomicBoolean(false)
+    var isPaused: AtomicBoolean = AtomicBoolean(false)
 
     
     suspend fun start() {
-        val jobs = cars.map {
+        cars.forEach {
             scope.launch {
                 move(it)
             }
         }
-        jobs.joinAll()
+
+        launchInput() //race 내부에서 사용자의 인풋을 감지하는 함수
     }
+
+    private fun launchInput() {
+        scope.launch {
+            while (isActive) {
+                val input = readlnOrNull()
+                if (input != null) {
+                    isPaused.set(true)
+                }
+            }
+        }
+    }
+
     private suspend fun move(car: Car) {
         while(coroutineContext.isActive && car.position < goal) {
             if(!isPaused.get()) {

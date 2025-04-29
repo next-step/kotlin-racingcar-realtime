@@ -6,7 +6,7 @@ import racingcar.controller.RaceController
 import racingcar.model.Car
 import racingcar.model.Race
 
-fun main() = runBlocking {
+fun main(): kotlin.Unit = runBlocking {
     RaceController().run()
 //    val carNames = listOf("car1", "car2", "car3")
 //    val goal = 10
