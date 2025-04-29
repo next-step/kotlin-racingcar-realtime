@@ -3,14 +3,12 @@ package racingcar.model
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
+import racingcar.support.CarCommand
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.coroutineContext
 
@@ -30,7 +28,6 @@ class Race(
     suspend fun startRace() {
         launchRace()
         launchInput()
-        readyForNewCar()
     }
 
     private fun launchRace() {
@@ -45,16 +42,41 @@ class Race(
         raceScope.launch(Dispatchers.IO) {
             while (coroutineContext.isActive) {
                 val input = readlnOrNull()
-                if (input != null && input.isNotBlank()) {
-                    isPaused.set(true)  // 입력받기 전에 멈춤
 
-                    val newCar = Car(input)
-                    channel.send(newCar)
+                if (input != null && input.isBlank()) {
+                    // 엔터만 쳤으면 -> 일시정지
+                    isPaused.set(true)
+
+                    println("명령어와 자동차 이름을 입력하세요. (add/boost/slow/stop), 아무 입력 없이 엔터치면 재개합니다.")
+                    val command = readlnOrNull()?.trim()
+
+                    if (command.isNullOrBlank()) {
+                        // 다시 재개
+                        println("경주를 다시 시작합니다.")
+                        isPaused.set(false)
+                        continue
+                    }
+
+                    val (carCommand, carName) = command.split(" ")
+//                    handleCommand(CarCommand.valueOf(carCommand), cars.get(carName))
+
+                    println("$carCommand 명령어 처리 완료. 경주를 다시 시작합니다.")
+                    isPaused.set(false)
                 }
-                isPaused.set(false)  // 입력 끝나고 다시 달림
             }
         }
     }
+
+    private suspend fun handleCommand(carCommand: CarCommand, car: String) {
+
+        when (carCommand) {
+            CarCommand.add -> readyForNewCar()
+            CarCommand.boost -> TODO()
+            CarCommand.slow -> TODO()
+            CarCommand.stop -> TODO()
+        }
+    }
+
 
     private suspend fun readyForNewCar() {
         while (coroutineContext.isActive) {
