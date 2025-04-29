@@ -3,6 +3,7 @@ package model
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -57,7 +58,7 @@ class Race(
                 if (input != null) {
                     println("(사용자 엔터 입력)")
                     pauseRace()
-                    readln()?.let {
+                    readln().let {
                         val pair = commandTypePair(it)
                         if (pair != null) {
                             carChannel.send(pair)
@@ -69,6 +70,7 @@ class Race(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private suspend fun monitorRace() {
         while (coroutineContext.isActive) {
             while (!carChannel.isEmpty) {
@@ -78,7 +80,6 @@ class Race(
                 val commandType = commandCar.first
                 val car = commandCar.second
 
-                println("$commandCar")
                 when (commandType) {
                     CommandType.ADD -> {
                         println("${car.name} 참가완료!")
