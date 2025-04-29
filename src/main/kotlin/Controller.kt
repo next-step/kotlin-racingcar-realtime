@@ -1,6 +1,6 @@
 import kotlinx.coroutines.runBlocking
 
-class Controller: checkingInterface {
+class Controller : checkingInterface {
     var race = Race()
     var carBuilder = CarBuilder()
     var inputManager = InputManager()
