@@ -40,14 +40,17 @@ class Car() {
 
         fun boostCar(car: Car) {
             car.mSpeed = car.mSpeed * 2
+            println("${car.mName} 속도 2배 증가")
         }
 
         fun slowCar(car: Car) {
             car.mSpeed = car.mSpeed / 2
+            println("${car.mName} 속도 2배 감소")
         }
 
         fun stopCar(car: Car) {
             car.mSpeed = 0
+            println("${car.mName} 정지")
         }
 
         fun createCar(carList: List<String>) {
