@@ -9,13 +9,14 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.collections.forEach
 import kotlin.coroutines.CoroutineContext
 
-object Race {
+class Race {
     var loopCount: Int = 0
     var context: CoroutineContext = Dispatchers.Default
     lateinit var job: List<Job>
     val raceDone: AtomicBoolean = AtomicBoolean(false)
     val scope = CoroutineScope(context + SupervisorJob())
     var restart: AtomicBoolean = AtomicBoolean(false)
+    var carList: MutableList<Car> = mutableListOf()
 
     fun cancelAllJob() {
         job.forEach {
@@ -28,7 +29,7 @@ object Race {
             cancelAllJob()
         }
         job =
-            Car.mCarList.map {
+            carList.map {
                 scope.launch(Dispatchers.Default) {
                     runLoop(it, this)
                 }
@@ -40,7 +41,7 @@ object Race {
         scope: CoroutineScope,
     ) {
         while (car.mPosition < loopCount && scope.isActive) {
-            Car.canMoveRandWithMove(car)
+            car.canMoveRandWithMove()
             if (car.mPosition >= loopCount) {
                 raceDone.set(true)
                 cancelAllJob()
@@ -48,18 +49,16 @@ object Race {
         }
     }
 
-    suspend fun runRace() {
+    fun runRace() {
         CoroutineScope(Dispatchers.Default).launch {
             while (!raceDone.get()) {
                 if (restart.get()) {
-                    synchronized(Car) {
-                        start()
-                        restart.set(false)
-                    }
+                    start()
+                    restart.set(false)
                 }
             }
-            Car.printWinner()
-            InputManager.closeAllChannel()
-        }.join()
+            msgChannel.send(DefMessage(DefMessage.MessageID.PrintWinner, ""))
+            msgChannel.send(DefMessage(DefMessage.MessageID.FinishAll, ""))
+        }
     }
 }

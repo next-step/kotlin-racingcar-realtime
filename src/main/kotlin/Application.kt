@@ -1,14 +1,10 @@
-import com.kmc.Car
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 
-fun main() {
-    Car.addListCar(InputManager.initCar())
-    Race.loopCount = InputManager.initLoopCount()
-    Race.start()
+val msgChannel = Channel<DefMessage>()
 
-    InputManager.runInputScope()
+fun main() {
     runBlocking {
-        InputManager.runAllChannel()
-        Race.runRace()
+        Controller().startMainLoop()
     }
 }

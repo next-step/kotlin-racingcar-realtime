@@ -1,15 +1,9 @@
-import com.kmc.Car
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
-object InputManager {
-    val addChannel = Channel<Car>()
-    val boostChannel = Channel<Car>()
-    val slowChannel = Channel<Car>()
-    val stopChannel = Channel<Car>()
+class InputManager {
     val ioScope = CoroutineScope(Dispatchers.IO)
 
     fun initCar(): List<String> {
@@ -46,54 +40,14 @@ object InputManager {
         }
     }
 
-    fun runAllChannel() {
-        ioScope.launch {
-            for (car in addChannel) {
-                synchronized(Car) {
-                    Car.addCar(car)
-                    Race.restart.set(true)
-                }
-            }
-        }
-        ioScope.launch {
-            for (car in boostChannel) {
-                synchronized(Car) {
-                    Car.boostCar(car)
-                    Race.restart.set(true)
-                }
-            }
-        }
-        ioScope.launch {
-            for (car in slowChannel) {
-                synchronized(Car) {
-                    Car.slowCar(car)
-                    Race.restart.set(true)
-                }
-            }
-        }
-        ioScope.launch {
-            for (car in stopChannel) {
-                synchronized(Car) {
-                    Car.stopCar(car)
-                    Race.restart.set(true)
-                }
-            }
-        }
-    }
-
-    fun closeAllChannel() {
-        addChannel.close()
-        boostChannel.close()
-        slowChannel.close()
-        stopChannel.close()
-    }
-
     fun realInput() {
-        while (!Race.raceDone.get()) {
+        while (true) {
             val input = readLine()
-            if (input != null && input == "" && !Race.raceDone.get()) {
+            if (input != null && input == "") {
                 println("(사용자 엔터 입력)")
-                Race.cancelAllJob()
+                runBlocking {
+                    msgChannel.send(DefMessage(DefMessage.MessageID.LoopStop, ""))
+                }
                 inputAddCar()
             }
         }
@@ -118,11 +72,11 @@ object InputManager {
         }
         runBlocking {
             when (stringList[0]) {
-                "add" -> addChannel.send(Car.makeCar(stringList[1]))
-                "boost" -> boostChannel.send(Car.findCar(stringList[1]))
-                "slow" -> slowChannel.send(Car.findCar(stringList[1]))
-                "stop" -> stopChannel.send(Car.findCar(stringList[1]))
-                "" -> Race.restart.set(true)
+                "add" -> msgChannel.send(DefMessage(DefMessage.MessageID.Add, stringList[1]))
+                "boost" -> msgChannel.send(DefMessage(DefMessage.MessageID.Boost, stringList[1]))
+                "slow" -> msgChannel.send(DefMessage(DefMessage.MessageID.Slow, stringList[1]))
+                "stop" -> msgChannel.send(DefMessage(DefMessage.MessageID.Stop, stringList[1]))
+                "" -> msgChannel.send(DefMessage(DefMessage.MessageID.LoopStart, ""))
                 else -> throw IllegalArgumentException("[ERROR] 입력이 잘못되었습니다. add {차량이름}, boost {차량이름}, slow {차량이름}, stop {차량이름}")
             }
         }
