@@ -26,7 +26,7 @@ class RacingController(
 
     private val scope = CoroutineScope(dispatcher + SupervisorJob())
     private val isPaused = AtomicBoolean(false)
-    private var channel = Channel<String>(Channel.UNLIMITED)
+    private val channel = Channel<String>(Channel.UNLIMITED)
 
     suspend fun start() {
         launchRace()
@@ -52,7 +52,7 @@ class RacingController(
     }
 
     private fun Car.getTheGoal() {
-        if (this.position == goal) {
+        if (this.position >= goal) {
             racingView.resultView(this)
             scope.cancel()
         }
@@ -75,23 +75,69 @@ class RacingController(
                 }
             } else {
                 try {
-                    val command = c.split(" ")
-                    if (command[0] != "add" || command.size > 2) {
-                        throw IllegalArgumentException("invalid command: $c")
+                    val input = c.split(" ")
+                    if (input.size != 2) {
+                        throw IllegalArgumentException("invalid input: $c")
                     }
-                    val name = command[1]
-                    if (_cars.map { it.name }.toList().contains(name)) {
-                        throw IllegalArgumentException("duplicate name: $name")
+                    val command = input[0]
+                    val name = input[1]
+                    when (command) {
+                        "add" -> {
+                            if (_cars.map { it.name }.toList().contains(name)) {
+                                throw IllegalArgumentException("duplicate name: $name")
+                            }
+                            addCar(name)
+                        }
+                        "boost", "slow", "stop", "start" -> {
+                            var car: Car
+                            _cars
+                                .find { it.name == name }
+                                .apply {
+                                    if (this == null) {
+                                        throw IllegalArgumentException("no car named $name")
+                                    }
+                                    car = this
+                                }
+                            controlCar(car, command)
+                        }
+                        else -> throw IllegalArgumentException("invalid command: $command")
                     }
-                    val car = Car(name)
-                    _cars.add(car)
-                    scope.launch { move(car) }
-                    println("$name 참가 완료!")
                 } catch (e: IllegalArgumentException) {
                     println("[ERROR] ${e.message}")
                 } catch (e: IllegalStateException) {
                     println("[ERROR] ${e.message}")
                 }
+            }
+        }
+    }
+
+    private fun addCar(name: String) {
+        val car = Car(name)
+        _cars.add(car)
+        scope.launch { move(car) }
+        println("$name 참가 완료!")
+    }
+
+    private fun controlCar(
+        car: Car,
+        command: String,
+    ) {
+        when (command) {
+            "boost" -> {
+                car.boost()
+                println("${car.name} 속도 2배 증가!")
+            }
+            "slow" -> {
+                car.slow()
+                println("${car.name} 속도 2배 감소!")
+            }
+            "stop" -> {
+                car.stop()
+                println("${car.name} 정지!")
+            }
+            "start" -> {
+                car.start()
+                println("${car.name} 출발!")
             }
         }
     }

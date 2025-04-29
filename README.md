@@ -73,5 +73,5 @@ car2가 최종 우승했습니다.
 - [x] Model(Car)
   - [x] speed 프로퍼티 추가
   - [x] boost, slow, stop function 추가
-- [ ] Controller
-  - [ ] 각 명령어 별 function 호출 및 출력
+- [x] Controller
+  - [x] 각 명령어 별 function 호출 및 출력

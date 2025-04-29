@@ -8,7 +8,7 @@ import racingcar.view.RacingView
 fun main() =
     runBlocking {
         val racingView = RacingView()
-        val cars = racingView.nameInputView().map { Car(it) }.toMutableList()
+        val cars = racingView.nameInputView().map { Car(it) }.toList()
         val goal = racingView.distanceInputView()
         val racingController = RacingController(cars, goal, racingView)
         racingController.start()
