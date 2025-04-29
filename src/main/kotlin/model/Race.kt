@@ -19,7 +19,7 @@ class Race(
     val dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
     private val scope = CoroutineScope(dispatcher + SupervisorJob())
-    val inputChannel = Channel<String>()
+    var inputChannel = Channel<String>()
     var isPaused = AtomicBoolean(false)
     var jobs: MutableList<Job> = mutableListOf()
 
@@ -33,8 +33,15 @@ class Race(
 
         scope.launch {
             while (true) {
+                if (isPaused.get()) {
+                    break
+                }
+
                 readLine() ?: break
+                println("1. 엔터 입력, isPause:${isPaused.get()} ")
                 isPaused.set(true)
+                println("1. 엔터 입력, isPause:${isPaused.get()} ")
+
 //                jobs.forEach { it.cancel() }
 
                 println("(사용자 엔터 입력)")
@@ -43,11 +50,24 @@ class Race(
                 if (input.isEmpty()) {
                     isPaused.set(false)
                 } else if (input.startsWith("add ")) {
+                    println("2. input send, isPause:${isPaused.get()} ")
                     inputChannel.send(input.replace("add ", ""))
                 } else {
                     isPaused.set(false)
                 }
-                inputChannel.close() // 오류남
+            }
+        }
+
+        // 채널을 consume하는 역할
+        scope.launch {
+            for (carName in inputChannel) {
+                val newCar = Car(carName)
+                println("새 참가자: ${newCar.carName}")
+
+                val newJob = scope.launch { move(newCar) }
+                jobs.add(newJob)
+
+                isPaused.set(false)
             }
         }
 
@@ -56,22 +76,14 @@ class Race(
 
     private suspend fun move(car: Car) {
         while (isActive && car.position < goalDistance) {
-            yield()
-
             while (isPaused.get()) {
-                // 사용자가 엔터를 누를 때까지 멈춤
-                val carName = inputChannel.receive() // 사용자가 입력을 완료할 때까지 대기
-                println("$carName 참가 완료!")
-                val inputCar = Car(carName)
-                val nowJob = scope.launch { move(inputCar) }
-//                jobs.add(nowJob)
-                // 다 받고
-                isPaused.set(false)
+                yield()
             }
-
+            yield()
             car.move()
             if (car.position == goalDistance) {
                 println("${car.carName}가 최종 우승했습니다.")
+                inputChannel.close()
                 scope.cancel()
             }
         }
