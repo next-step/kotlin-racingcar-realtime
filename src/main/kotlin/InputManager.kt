@@ -5,7 +5,7 @@ import kotlinx.coroutines.runBlocking
 
 class InputManager {
     val ioScope = CoroutineScope(Dispatchers.IO)
-    lateinit var iCheckingCar: checkingInterface
+    lateinit var iCheckingCar: CheckingInterface
 
     fun initCar(): List<String> {
         var ret: List<String> = listOf()
