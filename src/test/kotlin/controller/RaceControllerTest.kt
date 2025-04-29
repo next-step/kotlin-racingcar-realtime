@@ -2,12 +2,14 @@ package controller
 
 import entity.Car
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.test.runTest
 import model.RaceModel
 import org.junit.jupiter.api.Test
 import view.RaceView
+import kotlin.time.Duration.Companion.milliseconds
 
 class RaceControllerTest {
     @Test
@@ -22,14 +24,16 @@ class RaceControllerTest {
             val goal = 10
             val model = RaceModel()
             val view = RaceView()
-            val controller = RaceController(model, view)
-
-            controller.runRound(
-                cars,
-                goal,
-                CoroutineScope(Dispatchers.Unconfined),
-            )
-
+            val controller =
+                RaceController(
+                    model,
+                    view,
+                    Dispatchers.Unconfined,
+                )
+            cars.map { controller.runRound(it, goal) }
+            while (controller.scope.isActive) {
+                delay(100.milliseconds)
+            }
             cars.firstOrNull { it.distance == goal }?.name shouldBe "car3"
         }
 }
