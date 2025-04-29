@@ -82,7 +82,7 @@ class RaceController(
         }
     }
 
-    fun runOperation() =
+    fun runOperation() {
         scope.launch {
             while (isActive) {
                 val interrupt = readln()
@@ -100,10 +100,9 @@ class RaceController(
                 }
             }
         }
+    }
 
-    suspend fun parseOperation(
-        input: String,
-    ) {
+    suspend fun parseOperation(input: String) {
         if (input.isEmpty()) throw IllegalArgumentException("입력된 명령이 없습니다.")
         val operation = input.split(" ")
         if (operation.size != 2) throw IllegalArgumentException("올바른 명령이 아닙니다.")
