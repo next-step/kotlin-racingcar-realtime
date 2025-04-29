@@ -5,6 +5,7 @@ import kotlinx.coroutines.runBlocking
 
 class InputManager {
     val ioScope = CoroutineScope(Dispatchers.IO)
+    lateinit var IcheckingCar: checkingInterface
 
     fun initCar(): List<String> {
         var ret: List<String> = listOf()
@@ -72,10 +73,32 @@ class InputManager {
         }
         runBlocking {
             when (stringList[0]) {
-                "add" -> msgChannel.send(DefMessage(DefMessage.MessageID.Add, stringList[1]))
-                "boost" -> msgChannel.send(DefMessage(DefMessage.MessageID.Boost, stringList[1]))
-                "slow" -> msgChannel.send(DefMessage(DefMessage.MessageID.Slow, stringList[1]))
-                "stop" -> msgChannel.send(DefMessage(DefMessage.MessageID.Stop, stringList[1]))
+                "add" -> {
+                    if (IcheckingCar.findCar(stringList[1])) {
+                        throw IllegalArgumentException("[ERROR] 해당 자동차가 이미 존재합니다.")
+                    } else if (stringList[1].length > 5) {
+                        throw IllegalArgumentException("[ERROR] 자동차 이름을 5글자 이하로 입력해주세요.")
+                    }
+                    msgChannel.send(DefMessage(DefMessage.MessageID.Add, stringList[1]))
+                }
+                "boost" -> {
+                    if (!IcheckingCar.findCar(stringList[1])) {
+                        throw IllegalArgumentException("[ERROR] 해당 자동차가 존재하지 않습니다.")
+                    }
+                    msgChannel.send(DefMessage(DefMessage.MessageID.Boost, stringList[1]))
+                }
+                "slow" -> {
+                    if (!IcheckingCar.findCar(stringList[1])) {
+                        throw IllegalArgumentException("[ERROR] 해당 자동차가 존재하지 않습니다.")
+                    }
+                    msgChannel.send(DefMessage(DefMessage.MessageID.Slow, stringList[1]))
+                }
+                "stop" -> {
+                    if (!IcheckingCar.findCar(stringList[1])) {
+                        throw IllegalArgumentException("[ERROR] 해당 자동차가 존재하지 않습니다.")
+                    }
+                    msgChannel.send(DefMessage(DefMessage.MessageID.Stop, stringList[1]))
+                }
                 "" -> msgChannel.send(DefMessage(DefMessage.MessageID.LoopStart, ""))
                 else -> throw IllegalArgumentException("[ERROR] 입력이 잘못되었습니다. add {차량이름}, boost {차량이름}, slow {차량이름}, stop {차량이름}")
             }

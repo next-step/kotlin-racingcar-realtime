@@ -1,9 +1,13 @@
 import kotlinx.coroutines.runBlocking
 
-class Controller {
+class Controller: checkingInterface {
     var race = Race()
     var carBuilder = CarBuilder()
     var inputManager = InputManager()
+
+    override fun findCar(name: String): Boolean {
+        return carBuilder.mCarList.find { it.mName == name } != null
+    }
 
     suspend fun startMainLoop() {
         carBuilder.addListCar(inputManager.initCar())
@@ -11,6 +15,7 @@ class Controller {
         race.carList = carBuilder.mCarList
         race.start()
 
+        inputManager.IcheckingCar = this
         inputManager.runInputScope()
         runBlocking {
             race.runRace()
