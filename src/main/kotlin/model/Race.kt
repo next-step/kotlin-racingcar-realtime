@@ -30,7 +30,9 @@ class Race(
         val inputJob = scope.launch { launchInput() }
         val monitorJob = scope.launch { monitorRace() }
 
-        joinAll(startJob, inputJob, monitorJob)
+        startJob.join()
+        inputJob.join()
+        monitorJob.join()
     }
 
     private suspend fun launchStart() {
@@ -41,13 +43,15 @@ class Race(
         jobs.joinAll()
     }
 
-    private suspend fun launchInput() {
-        while (coroutineContext.isActive) {
-            val input = readlnOrNull()
-            if (input != null) {
-                pauseRace()
-                processInput()
-                resumeRace()
+    private fun launchInput() {
+        scope.launch {
+            while (isActive) {
+                val input = readlnOrNull()
+                if (input != null) {
+                    pauseRace()
+                    processInput()
+                    resumeRace()
+                }
             }
         }
     }
