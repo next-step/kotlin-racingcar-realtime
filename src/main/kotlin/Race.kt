@@ -5,6 +5,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.collections.forEach
 import kotlin.coroutines.CoroutineContext
 
@@ -12,7 +13,7 @@ object Race {
     var loopCount: Int = 0
     var context: CoroutineContext = Dispatchers.Default
     lateinit var job: List<Job>
-    var raceDone = false
+    val raceDone: AtomicBoolean = AtomicBoolean(false)
 
     fun cancelAllJob() {
         job.forEach {
@@ -27,8 +28,8 @@ object Race {
                 scope.launch(Dispatchers.Default) {
                     while (it.mPosition < loopCount && isActive) {
                         Car.canMoveRandWithMove(it)
-                        if (it.mPosition == loopCount) {
-                            raceDone = true
+                        if (it.mPosition >= loopCount) {
+                            raceDone.set(true)
                             job.forEach { it -> it.cancel() }
                         }
                     }
@@ -43,8 +44,8 @@ object Race {
                 scope.launch(Dispatchers.Default) {
                     while (it.mPosition < loopCount && isActive) {
                         Car.canMoveRandWithMove(it)
-                        if (it.mPosition == loopCount) {
-                            raceDone = true
+                        if (it.mPosition >= loopCount) {
+                            raceDone.set(true)
                             job.forEach { it -> it.cancel() }
                         }
                     }

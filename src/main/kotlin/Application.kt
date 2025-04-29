@@ -6,77 +6,104 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
-// lateinit var inputJob: Job
-val channel = Channel<String>()
+val addChannel = Channel<String>()
+val boostChannel = Channel<String>()
+val slowChannel = Channel<String>()
+val stopChannel = Channel<String>()
 
-lateinit var inputTherad: Thread
+var restart = false
 
-fun main() =
-    runBlocking {
-        var loopCount = 0
-        var success = false
-        while (!success) {
-            try {
-                val inputList = inputCar()
-                makeCar(inputList)
-                success = true
-            } catch (e: IllegalArgumentException) {
-                println(e.message)
-            }
+fun main() {
+    var loopCount = 0
+    var success = false
+    while (!success) {
+        try {
+            val inputList = inputCar()
+            makeCar(inputList)
+            success = true
+        } catch (e: IllegalArgumentException) {
+            println(e.message)
         }
-        success = false
-        while (!success) {
-            try {
-                loopCount = inputLoopCount()
-                success = true
-            } catch (e: IllegalArgumentException) {
-                println(e.message)
-            }
+    }
+    success = false
+    while (!success) {
+        try {
+            loopCount = inputLoopCount()
+            success = true
+        } catch (e: IllegalArgumentException) {
+            println(e.message)
         }
-
-//    inputJob = launch {
-//        realInput()
-//    }
-
-        inputTherad =
-            Thread {
-                realInput()
-            }
-
-        launch {
-            for (name in channel) {
-                Car.addCar(name)
-                Race.reStart()
-            }
-        }
-        asyncInput(loopCount)
     }
 
-suspend fun asyncInput(loopCount: Int) {
+    CoroutineScope(Dispatchers.Default).launch {
+        realInput()
+    }
+
+    runBlocking {
+        launch {
+            for (name in addChannel) {
+                synchronized(Car) {
+                    Car.addCar(name)
+                    restart = true
+                }
+            }
+        }
+        launch {
+            for (name in boostChannel) {
+                synchronized(Car) {
+                    Car.boostCar(name)
+                    restart = true
+                }
+            }
+        }
+        launch {
+            for (name in slowChannel) {
+                synchronized(Car) {
+                    Car.slowCar(name)
+                    restart = true
+                }
+            }
+        }
+        launch {
+            for (name in stopChannel) {
+                synchronized(Car) {
+                    Car.stopCar(name)
+                    restart = true
+                }
+            }
+        }
+        runRace(loopCount)
+    }
+}
+
+suspend fun runRace(loopCount: Int) {
     CoroutineScope(Dispatchers.Default).launch {
         Race.loopCount = loopCount
         Race.start()
-        while (!Race.raceDone) {
+        while (!Race.raceDone.get()) {
             delay(1)
+            if (restart) {
+                synchronized(Car) {
+                    Race.reStart()
+                    restart = false
+                }
+            }
         }
         Car.printWinner()
-//        inputJob.cancel()
-        inputTherad.interrupt()
-        channel.close()
+        addChannel.close()
+        boostChannel.close()
+        slowChannel.close()
+        stopChannel.close()
     }.join()
 }
 
 fun realInput() {
-    while (!Race.raceDone) {
-//        delay(1)
+    while (!Race.raceDone.get()) {
         val input = readLine()
         println("(사용자 엔터 입력)")
-//        delay(1)
-        if (input != null) {
+        if (input != null && input == "" && !Race.raceDone.get()) {
             Race.cancelAllJob()
-            runBlocking {
-                channel.send(inputAddCar())
-            }
+            inputAddCar()
         }
     }
 }
@@ -91,14 +118,29 @@ fun inputCar(): List<String> {
     return readLine()?.split(",") ?: throw IllegalArgumentException("[ERROR] 입력을 넣어주세요")
 }
 
-fun inputAddCar(): String {
-    var ret = ""
+fun inputAddCar() {
     try {
-        ret = readLine()!!.split("add ")[1]
-    } catch (e: Exception) {
+        parseInput(readLine()!!)
+    } catch (_: Exception) {
         throw IllegalArgumentException("[ERROR] 입력이 잘못되었습니다.")
     }
-    return ret
+}
+
+fun parseInput(input: String) {
+    val stringList = input.split(" ")
+    if (stringList.size < 2 && input != "") {
+        throw IllegalArgumentException("[ERROR] 입력이 잘못되었습니다.")
+    }
+    runBlocking {
+        when (stringList[0]) {
+            "add" -> addChannel.send(stringList[1])
+            "boost" -> boostChannel.send(stringList[1])
+            "slow" -> slowChannel.send(stringList[1])
+            "stop" -> stopChannel.send(stringList[1])
+            "" -> restart = true
+            else -> throw IllegalArgumentException("[ERROR] 입력이 잘못되었습니다.")
+        }
+    }
 }
 
 fun inputLoopCount(): Int {

@@ -19,7 +19,39 @@ class Car() {
         }
 
         fun addCar(name: String) {
+            val findCar = mCarList.find { it.mName == name }
+            if (findCar != null) {
+                println("이미 추가된 자동차 입니다.")
+                return
+            }
             mCarList.add(Car().apply { mName = name })
+        }
+
+        fun boostCar(name: String) {
+            val findCar = mCarList.find { it.mName == name }
+            if (findCar == null) {
+                println("찾는 자동차가 없습니다.")
+                return
+            }
+            findCar.mSpeed = findCar.mSpeed * 2
+        }
+
+        fun slowCar(name: String) {
+            val findCar = mCarList.find { it.mName == name }
+            if (findCar == null) {
+                println("찾는 자동차가 없습니다.")
+                return
+            }
+            findCar.mSpeed = findCar.mSpeed / 2
+        }
+
+        fun stopCar(name: String) {
+            val findCar = mCarList.find { it.mName == name }
+            if (findCar == null) {
+                println("찾는 자동차가 없습니다.")
+                return
+            }
+            findCar.mSpeed = 0
         }
 
         fun createCar(carList: List<String>) {
@@ -73,6 +105,7 @@ class Car() {
             field = value
         }
     var mPosition = 0
+    var mSpeed = 1
 
     fun checkingNameException(name: String) {
         if (name.length > 5) {
@@ -86,6 +119,6 @@ class Car() {
     }
 
     fun moveCar() {
-        mPosition++
+        mPosition += mSpeed
     }
 }
