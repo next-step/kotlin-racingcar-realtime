@@ -1,5 +1,7 @@
 package controller
 
+import controller.util.CommandEvent
+import controller.util.RacingCarCommandParser
 import controller.util.RacingCarMapper
 import controller.util.RacingCarNameValidator
 import controller.util.RacingDistanceValidator
@@ -14,7 +16,7 @@ import kotlin.coroutines.coroutineContext
 class RacingControllerVer2(
     val raceView: RaceView,
     val dispatcher: CoroutineDispatcher = Dispatchers.Default,
-    val channel: Channel<RacingCar> = Channel(Channel.UNLIMITED),
+    val channel: Channel<CommandEvent> = Channel(Channel.UNLIMITED),
 ) {
     var racingCars = mutableListOf<RacingCar>()
     var distance = Distance()
@@ -92,7 +94,7 @@ class RacingControllerVer2(
     }
 
     private suspend fun move(racingCar: RacingCar) {
-        while (coroutineContext.isActive && racingCar.position < distance.totalDistance) {
+        while (coroutineContext.isActive && racingCar.position < distance.totalDistance && racingCar.isAvailable) {
             if (isGamePaused.get().not()) {
                 racingCar.move()
                 printRacingCarStatus(racingCar)
@@ -118,7 +120,10 @@ class RacingControllerVer2(
 
                     println("새로운 차량 이름 입력해주세요!")
                     val command = readlnOrNull()
-                    channel.send(RacingCar(command ?: "")) // Todo 빈 차량 이름 예외 처리 하기!
+
+                    val commandEvent = RacingCarCommandParser.parseCommand(command ?: "")
+
+                    channel.send(commandEvent)
 
                     isGamePaused.set(false)
                 }
@@ -131,16 +136,26 @@ class RacingControllerVer2(
         scope.launch {
             while (isActive) {
                 while (!channel.isEmpty) {
-                    val newRacingCar = channel.receive()
+                    val commandEvent = channel.receive()
 
-                    if (newRacingCar.name.isEmpty()) {
-                        println("차량 이름에 빈 문자열이 입력되었습니다..")
-                    } else {
-                        println("${newRacingCar.name} 참가 완료 !!")
-                        //println("this : ${this.hashCode()}, scope : ${scope.hashCode()}")
-
-                        scope.launch {
-                            move(newRacingCar)
+                    when (commandEvent) {
+                        is CommandEvent.Add -> {
+                            println("${commandEvent.addCarName} 참가 완료 !!")
+                            scope.launch {
+                                val newRacingCar = RacingCar(commandEvent.addCarName)
+                                racingCars.add(newRacingCar)
+                                move(newRacingCar)
+                            }
+                        }
+                        is CommandEvent.Stop -> {
+                            val stoppedCar = racingCars.find { it.name == commandEvent.stopCarName }
+                            if (stoppedCar != null) {
+                                stoppedCar.isAvailable = false
+                                println("${stoppedCar.name} 차량 정지 !")
+                            }
+                        }
+                        else -> {
+                            println("차량명 입력 오류 .. !")
                         }
                     }
                 }
