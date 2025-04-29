@@ -15,11 +15,10 @@ import kotlin.collections.map
 
 fun main() {
     runBlocking {
-        val carNames = InputView.readCars()
-        val cars = carNames.map(::Car)
+        val cars = InputView.readCars().map(::Car)
         val goal = InputView.readGoal()
-        val channel = Channel<Command>()
 
+        val channel = Channel<Command>()
         val race = Race(cars, goal, channel)
         val commandScope = listenCommand(race, channel)
 

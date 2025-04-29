@@ -21,7 +21,7 @@ class RaceTest {
                 )
             val goal = 10
             val dispatcher = StandardTestDispatcher(testScheduler)
-            val race = Race(cars, goal, dispatcher)
+            val race = Race(cars, goal, dispatcher = dispatcher)
 
             // when
             race.startRace()
@@ -42,7 +42,7 @@ class RaceTest {
                 )
             val goal = 10
             val dispatcher = StandardTestDispatcher(testScheduler)
-            val race = Race(cars, goal, dispatcher)
+            val race = Race(cars, goal, dispatcher = dispatcher)
 
             // when
             race.startRace()
