@@ -52,5 +52,4 @@ class RealtimeRaceTest {
         // then
         realtimeRace.cars.find { it.name == "car4" }?.name shouldBe "car4"
     }
-
 }

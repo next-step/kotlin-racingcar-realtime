@@ -18,6 +18,6 @@ data class Car(val name: String, var position: Int, var isWinner: Boolean = fals
 
     fun printWinner() {
         println()
-        println("최종 우승자 : ${name}")
+        println("${name}가 최종 우승했습니다.")
     }
 }

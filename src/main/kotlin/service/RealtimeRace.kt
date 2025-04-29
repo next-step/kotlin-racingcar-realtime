@@ -10,8 +10,7 @@ class RealtimeRace(
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob()),
     private val channel: Channel<Car> = Channel(Channel.UNLIMITED),
     private val readInput: suspend () -> String = { readln() },
-    private val usingPause: Boolean = true,
-    private val onRaceFinish: () -> Unit = { scope.cancel() }
+    private val usingPause: Boolean = true
 ) {
     private val isPaused: AtomicBoolean = AtomicBoolean(false)
     private var _cars: MutableList<Car> = mutableListOf()
@@ -97,11 +96,11 @@ class RealtimeRace(
         val newCarName = input.split(" ", limit = 2).getOrNull(1)?.takeIf { it.isNotBlank() }
 
         if (newCarName == null) {
-            println("잘못된 추가 명령입니다.")
+            println("잘못된 명령입니다.")
         } else if (_cars.any { it.name == newCarName }) {
             println("이미 있는 자동차 이름입니다.")
         } else {
-            println("새로운 자동차가 추가되었습니다: $newCarName")
+            println("$newCarName 참가 완료")
             val newCar = Car(newCarName, 0, false)
             _cars.add(newCar)
             channel.send(newCar)
@@ -118,7 +117,7 @@ class RealtimeRace(
         if (car.position == distance) {
             car.printWinner()
             car.isWinner = true
-            onRaceFinish()
+            scope.cancel()
         }
     }
 }
