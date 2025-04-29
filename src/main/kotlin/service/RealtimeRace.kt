@@ -9,10 +9,14 @@ import kotlin.coroutines.coroutineContext
 class RealtimeRace(
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob()),
     private val channel: Channel<Car> = Channel(Channel.UNLIMITED),
+    private val readInput: suspend () -> String = { readln() },
+    private val usingPause: Boolean = true,
+    private val onRaceFinish: () -> Unit = { scope.cancel() }
 ) {
     private val isPaused: AtomicBoolean = AtomicBoolean(false)
-    private val _cars: MutableList<Car> = mutableListOf()
+    private var _cars: MutableList<Car> = mutableListOf()
     val cars: List<Car> get() = _cars.toList()
+    private val jobs: MutableList<Job> = mutableListOf()
 
     suspend fun start(cars: List<Car>, distance: Int) {
         // mutableList에 모두 삽입
@@ -21,12 +25,17 @@ class RealtimeRace(
         val raceJob = scope.launch {
             race(_cars, distance)
         }
-        val pauseJob = scope.launch {
-            pause()
+        jobs.add(raceJob)
+
+        if (usingPause) {
+            val pauseJob = scope.launch {
+                pause()
+            }
+            jobs.add(pauseJob)
         }
         println()
         println(">> 레이스 시작")
-        joinAll(raceJob, pauseJob)
+        joinAll(*jobs.toTypedArray())
     }
 
     private suspend fun race(cars: List<Car>, distance: Int) {
@@ -56,13 +65,13 @@ class RealtimeRace(
     private fun pause() {
         scope.launch {
             while (isActive) {
-                val input = readln()
+                val input = readInput()
                 when {
                     input.isEmpty() -> {
                         pauseRace()
                     }
                     input.startsWith("add ") -> {
-                        handleAddCommand(input, _cars, channel)
+                        handleAddCommand(input)
                         resumeRace()
                     }
                     else -> {
@@ -84,7 +93,7 @@ class RealtimeRace(
         isPaused.set(false)
     }
 
-    suspend fun handleAddCommand(input: String, _cars: List<Car>, channel: Channel<Car>) {
+    suspend fun handleAddCommand(input: String) {
         val newCarName = input.split(" ", limit = 2).getOrNull(1)?.takeIf { it.isNotBlank() }
 
         if (newCarName == null) {
@@ -93,7 +102,9 @@ class RealtimeRace(
             println("이미 있는 자동차 이름입니다.")
         } else {
             println("새로운 자동차가 추가되었습니다: $newCarName")
-            channel.send(Car(newCarName, 0))
+            val newCar = Car(newCarName, 0, false)
+            _cars.add(newCar)
+            channel.send(newCar)
         }
     }
 
@@ -106,7 +117,8 @@ class RealtimeRace(
     private fun checkWinner(car: Car, distance: Int) {
         if (car.position == distance) {
             car.printWinner()
-            scope.cancel()
+            car.isWinner = true
+            onRaceFinish()
         }
     }
 }

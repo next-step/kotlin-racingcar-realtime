@@ -2,7 +2,7 @@ package model
 
 import kotlinx.coroutines.delay
 
-data class Car(val name: String, var position: Int) {
+data class Car(val name: String, var position: Int, var isWinner: Boolean = false) {
     suspend fun waitRandomTime() {
         delay((0..500).random().toLong())
     }

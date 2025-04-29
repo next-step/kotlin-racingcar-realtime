@@ -9,7 +9,7 @@ object InputView {
         val carsName = input.split(",")
             .map { it.trim() }
             .filter { it.isNotBlank() }
-        return carsName.map { Car(it, 0) }
+        return carsName.map { Car(it, 0, false) }
     }
 
     fun getDistance(): Int {
