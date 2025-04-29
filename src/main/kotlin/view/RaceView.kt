@@ -16,7 +16,7 @@ class RaceView {
     }
 
     fun showCarStatus(car: Car) {
-        println("${car.name} : ${"-".repeat(car.distance)} (speed: ${car.speed})")
+        println("${car.name} : ${"-".repeat(car.distance)}")
     }
 
     fun addCarMsg(name: String) {
