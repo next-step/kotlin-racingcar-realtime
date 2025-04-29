@@ -1,4 +1,6 @@
 package model
 
-class Car {
-}
+data class Car(
+    val name: String,
+    var position: Int,
+)

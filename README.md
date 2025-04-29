@@ -1,7 +1,7 @@
 # kotlin-racingcar-realtime
 
 ## 요구사항 정의
-- [ ] feat: 자동차의 이름과 현재 위치를 관리한다.(Cars)
+- [x] feat: 자동차의 이름과 현재 위치를 관리한다.(Car)
 - [ ] feat: 자동차 전체를 관리한다.(Race)
 - [ ] feat: 코루틴을 활용해 자동차 여러 대를 동시에 움직인다.
 - [ ] feat: 사용자의 입력값을 받는다. (InputView)
