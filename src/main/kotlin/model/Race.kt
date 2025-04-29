@@ -7,7 +7,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
@@ -71,15 +70,13 @@ class Race(
 //    }
 
     suspend fun start() {
-        coroutineScope {
-            val raceJob = launch { launchRace() }
-            val inputJob = launch { launchInput() }
-            val monitorJob = launch { monitorRace() }
+        val raceJob = scope.launch { launchRace() }
+        val inputJob = scope.launch { launchInput() }
+        val monitorJob = scope.launch { monitorRace() }
 
-            raceJob.join()
-            inputJob.join()
-            monitorJob.join()
-        }
+        raceJob.join()
+        inputJob.join()
+        monitorJob.join()
     }
 
     private fun launchRace() {
@@ -123,12 +120,11 @@ class Race(
 
         if (input.isNotEmpty()) {
             val inputList = input.split(' ')
-            if (inputList.size < 2) {
+            if (checkInput(inputList)) {
                 println("다시 입력해주세요.")
                 enterInput()
                 return
             }
-
             val command = inputList[0]
             val carName = inputList[1]
 
@@ -136,6 +132,19 @@ class Race(
                 channel.send(Car(carName))
             }
         }
+    }
+
+    private fun checkInput(inputList: List<String>): Boolean {
+        if (inputList.size < 2) { // 스페이스 유무 확인
+            return true
+        }
+        if (inputList[1].length > 5) {
+            return true
+        }
+        if (inputList[0] != "add") {
+            return true
+        }
+        return false
     }
 
     private fun pauseRace() {
