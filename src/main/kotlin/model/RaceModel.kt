@@ -31,6 +31,10 @@ class RaceModel {
         channel.send(car)
     }
 
+    fun clearCarList() {
+        carMap.clear()
+    }
+
     fun initGoal(input: String): Int {
         if (input.isEmpty()) throw IllegalArgumentException("입력된 횟수가 없습니다.")
         try {
@@ -49,6 +53,4 @@ class RaceModel {
         car.move()
         return car
     }
-
-
 }

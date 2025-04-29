@@ -43,6 +43,7 @@ class RaceController(
                 raceModel.initCarList(readln(), carChannel)
                 return
             } catch (e: IllegalArgumentException) {
+                raceModel.clearCarList()
                 handleError(e)
             }
         }
