@@ -19,6 +19,7 @@ class Race(
     private val raceScope = CoroutineScope(dispatcher)
     private val isPaused = AtomicBoolean(false)
 
+    private var jobs = mutableMapOf<String, Job>()
     suspend fun startRace() {
         raceScope.launch {
             launchRace()
@@ -28,11 +29,12 @@ class Race(
     }
 
     private suspend fun launchRace() = raceScope.launch{
-        _cars.map { car ->
-            launch {
-                goCar(car)
-            }
-        }
+      jobs = _cars.map { car ->
+                val job = launch {
+                    goCar(car)
+                }
+                car.name to job
+            }.toMap().toMutableMap()
     }
 
     private fun launchInput() {
@@ -48,6 +50,29 @@ class Race(
                         val newCarName = inputCarName.removePrefix("add ").trim()
                         val newCar = Car(newCarName)
                         channel.send(newCar)
+                    }
+
+                    if (inputCarName.startsWith("boost ")) {
+                        val boostCarName = inputCarName.removePrefix("boost ").trim()
+                        val boostCar =  cars.first { it.name == boostCarName }
+                        boostCar.boost()
+                        println("${boostCar.name} 부스트!(x${boostCar.rate})" )
+                    }
+
+                    if (inputCarName.startsWith("slow ")) {
+                        val slowCarName = inputCarName.removePrefix("slow ").trim()
+                        val slowCar =  cars.first { it.name == slowCarName }
+                        slowCar.slow()
+                        println("${slowCar.name} 슬로우~~(x${slowCar.rate})" )
+                    }
+
+                    if (inputCarName.startsWith("stop ")) {
+                        val stopCarName = inputCarName.removePrefix("stop ").trim()
+                        val stopCar =  cars.first { it.name == stopCarName}
+                        _cars.remove(stopCar)
+                        jobs.get(stopCar.name)?.cancel()
+                        jobs.remove(stopCar.name)
+                        println("${stopCar.name} 차 정지!! " )
                     }
 
                 }

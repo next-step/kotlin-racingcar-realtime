@@ -5,7 +5,8 @@ import kotlin.time.Duration.Companion.milliseconds
 
 class Car(
     val name: String,
-    var position: Int = 0
+    var position: Int = 0,
+    var rate: Double = 1.0
 ) {
     init {
         require(name.isNotBlank() && name.length <= 5) {
@@ -14,13 +15,21 @@ class Car(
     }
 
     suspend fun moveForward() {
-        delay(RandomMovingRule.getDelayTime().milliseconds)
+        delay(RandomMovingRule.getDelayTime().milliseconds * (1/rate))
         position ++
         println(this)
     }
 
     override fun toString(): String {
         return "$name : ${"-".repeat(position)}"
+    }
+
+    fun boost() {
+        rate *= 2
+    }
+
+    fun slow() {
+        rate /= 2
     }
 
     companion object {
