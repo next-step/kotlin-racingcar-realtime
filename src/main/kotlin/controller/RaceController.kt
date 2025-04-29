@@ -77,6 +77,7 @@ class RaceController(
                 raceView.showCarStatus(car)
                 if (car.isFinished(goal)) {
                     raceView.showWinner(car)
+                    isPause.set(false)
                     scope.cancel()
                     pauseChannel.close()
                     carChannel.close()
@@ -88,14 +89,21 @@ class RaceController(
     suspend fun runOperation() =
         withContext(Dispatchers.IO) {
             while (scope.isActive) {
-                readln()
-                isPause.set(true)
-                while (isPause.get()) {
-                    try {
-                        raceModel.initOperation(readln(), carChannel)
-                        isPause.set(false)
-                    } catch (e: Exception) {
-                        handleError(e)
+                launch {
+                    pauseChannel.send(readln())
+                }
+                for (interrupt in pauseChannel) {
+                    if (interrupt.isEmpty()) {
+                        scope.ensureActive()
+                        isPause.set(true)
+                        while (isPause.get()) {
+                            try {
+                                raceModel.initOperation(readln(), carChannel)
+                                isPause.set(false)
+                            } catch (e: Exception) {
+                                handleError(e)
+                            }
+                        }
                     }
                 }
             }
