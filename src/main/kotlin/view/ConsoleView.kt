@@ -1,8 +1,7 @@
 package view
 
 object ConsoleView {
-
-    const val errorTag = "[ERROR]"
+    const val ERROR_TAG = "[ERROR]"
 
     fun tryInputCarName(): List<String> {
         val list = ArrayList<String>()
@@ -18,9 +17,8 @@ object ConsoleView {
                     }
                 }
                 break
-
             } catch (e: Exception) {
-                println("$errorTag ${e.message}")
+                println("$ERROR_TAG ${e.message}")
             }
         }
         return list
@@ -41,9 +39,8 @@ object ConsoleView {
         while (true) {
             try {
                 return inputGoalDistance()
-
             } catch (e: Exception) {
-                println("$errorTag ${e.message}")
+                println("$ERROR_TAG ${e.message}")
             }
         }
     }
@@ -53,5 +50,4 @@ object ConsoleView {
         val count = readLine()
         return count?.toIntOrNull() ?: throw IllegalArgumentException("숫자만 입력 가능합니다.")
     }
-
 }

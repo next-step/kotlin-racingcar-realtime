@@ -7,6 +7,7 @@ enum class CommandType(val command: String) {
     STOP("stop"),
     NONE(""),
     ;
+
     companion object {
         fun fromCommand(command: String): CommandType {
             return values().find { it.command.equals(command, ignoreCase = true) } ?: NONE

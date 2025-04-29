@@ -16,11 +16,10 @@ import kotlinx.coroutines.yield
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.coroutineContext
 
-
 class Race(
     cars: List<Car>,
     val goal: Int,
-    val dispatcher: CoroutineDispatcher = Dispatchers.Default
+    val dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
     private val _cars: MutableList<Car> = cars.toMutableList()
     val cars: List<Car>
@@ -31,7 +30,6 @@ class Race(
     val isPaused: AtomicBoolean = AtomicBoolean(false)
     private val jobMap = mutableMapOf<String, Job>()
 
-
     suspend fun start() {
         launchRace()
         launchInput()
@@ -40,10 +38,11 @@ class Race(
 
     private fun launchRace() {
         _cars.forEach {
-            val job = scope.launch {
-                println("move: ${it.name}")
-                move(it)
-            } // 직접만든 scope로 동작되게
+            val job =
+                scope.launch {
+                    println("move: ${it.name}")
+                    move(it)
+                } // 직접만든 scope로 동작되게
 
             jobMap[it.name] = job
         }
@@ -91,9 +90,7 @@ class Race(
                         jobMap[car.name]?.cancel()
                     }
                     CommandType.NONE -> {
-
                     }
-
                 }
             }
         }
@@ -122,7 +119,8 @@ class Race(
             }
             CommandType.BOOST,
             CommandType.SLOW,
-            CommandType.STOP -> {
+            CommandType.STOP,
+            -> {
                 _cars.firstOrNull { it.name == name }?.let { Pair(commandType, it) }
             }
             CommandType.NONE -> null
@@ -134,10 +132,11 @@ class Race(
     }
 
     private suspend fun addCar(car: Car) {
-        val jobs = scope.launch {
-            _cars.add(car)
-            move(car)
-        }
+        val jobs =
+            scope.launch {
+                _cars.add(car)
+                move(car)
+            }
         jobs.join()
     }
 
@@ -161,4 +160,3 @@ class Race(
         }
     }
 }
-

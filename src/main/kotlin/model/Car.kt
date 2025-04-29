@@ -24,5 +24,4 @@ data class Car(
     fun slowDown() {
         speed--
     }
-
 }
