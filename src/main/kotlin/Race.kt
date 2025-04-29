@@ -14,6 +14,8 @@ object Race {
     var context: CoroutineContext = Dispatchers.Default
     lateinit var job: List<Job>
     val raceDone: AtomicBoolean = AtomicBoolean(false)
+    val scope = CoroutineScope(context + SupervisorJob())
+    var restart: AtomicBoolean = AtomicBoolean(false)
 
     fun cancelAllJob() {
         job.forEach {
@@ -21,35 +23,43 @@ object Race {
         }
     }
 
-    fun reStart() {
-        val scope = CoroutineScope(context + SupervisorJob())
+    fun start() {
+        if (::job.isInitialized) {
+            cancelAllJob()
+        }
         job =
             Car.mCarList.map {
                 scope.launch(Dispatchers.Default) {
-                    while (it.mPosition < loopCount && isActive) {
-                        Car.canMoveRandWithMove(it)
-                        if (it.mPosition >= loopCount) {
-                            raceDone.set(true)
-                            job.forEach { it -> it.cancel() }
-                        }
-                    }
+                    runLoop(it, this)
                 }
             }
     }
 
-    fun start() {
-        val scope = CoroutineScope(context + SupervisorJob())
-        job =
-            Car.mCarList.map {
-                scope.launch(Dispatchers.Default) {
-                    while (it.mPosition < loopCount && isActive) {
-                        Car.canMoveRandWithMove(it)
-                        if (it.mPosition >= loopCount) {
-                            raceDone.set(true)
-                            job.forEach { it -> it.cancel() }
-                        }
+    suspend fun runLoop(
+        car: Car,
+        scope: CoroutineScope,
+    ) {
+        while (car.mPosition < loopCount && scope.isActive) {
+            Car.canMoveRandWithMove(car)
+            if (car.mPosition >= loopCount) {
+                raceDone.set(true)
+                cancelAllJob()
+            }
+        }
+    }
+
+    suspend fun runRace() {
+        CoroutineScope(Dispatchers.Default).launch {
+            while (!raceDone.get()) {
+                if (restart.get()) {
+                    synchronized(Car) {
+                        start()
+                        restart.set(false)
                     }
                 }
             }
+            Car.printWinner()
+            InputManager.closeAllChannel()
+        }.join()
     }
 }

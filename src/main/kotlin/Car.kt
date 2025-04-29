@@ -7,6 +7,11 @@ class Car() {
         val mCarList: MutableList<Car> =
             mutableListOf()
 
+        fun addListCar(carList: List<String>) {
+            clearCar()
+            createCar(carList)
+        }
+
         fun clearCar() {
             mCarList.clear()
         }
