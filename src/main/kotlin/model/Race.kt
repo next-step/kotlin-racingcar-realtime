@@ -34,7 +34,6 @@ class Race(
 
     suspend fun move(car: Car) {
         while (coroutineContext.isActive && car.position < goal) {
-            println("${car.position}")
             car.move()
 
             if (car.position == goal) {

@@ -2,14 +2,18 @@ package controller
 
 import model.Car
 import model.Race
+import view.InputView
 
 class RaceController {
+    val inputView: InputView = InputView()
+
     suspend fun run() {
         // inputView로 구현
-        val car = listOf(Car("car1", 0), Car("car2", 0))
-        val goal = 10
+        val names = inputView.getCarNames()
+        val cars = names.map(::Car)
+        val goal = inputView.getGoal()
 
-        val race = Race(car, goal)
+        val race = Race(cars, goal)
 
         // 경기 시작
         race.start()

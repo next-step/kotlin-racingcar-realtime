@@ -14,8 +14,8 @@
 - [x] feat: 경기를 시작한다. (RaceController)
 
 ### View
-- [ ] feat: 사용자의 입력값을 받는다. (InputView)
-- [ ] feat: 승리자를 출력한다.
+- [x] feat: 사용자의 입력값을 받는다. (InputView)
+- [x] feat: 승리자를 출력한다.
 - [ ] feat: Enter를 입력하면 경기를 멈춘다.
 - [ ] feat: 사용자가 차를 추가하거나 다시 엔터를 눌려 경기를 재개할 수 있다.
 
